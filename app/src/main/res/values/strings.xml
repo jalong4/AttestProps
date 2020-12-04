@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">AttestProps</string>
+    <string name="app_title">Attestation Test app</string>
+    <string name="feature_supported">Attestation Features Supported</string>
+    <string name="software_id_attestation_supported">Software ID Attestation Supported:</string>
+    <string name="hardware_id_attestation_supported">Hardware ID Attestation Supported:</string>
+    <string name="verified_boot_supported">Verified Boot Supported:</string>
+    <string name="device_id_attestation_supported">Device ID Attestation Supported:</string>
+    <string name="device_properties_attestation_supported">Device Properties Attestation Supported:</string>
+    <string name="device_properties">Device Properties</string>
+    <string name="brand_property">ro.product.brand:</string>
+    <string name="device_property">ro.product.device:</string>
+    <string name="product_property">ro.build.product:</string>
+    <string name="manufacturer_property">ro.product.manufacturer:</string>
+    <string name="model_property">ro.product.model:</string>
+    <string name="attested_device_properties">Attested Device Properties</string>
+    <string name="attested_brand_property">TEE enforced brand:</string>
+    <string name="attested_device_property">TEE enforced device:</string>
+    <string name="attested_product_property">TEE enforced product:</string>
+    <string name="attested_manufacturer_property">TEE enforced manufacturer:</string>
+    <string name="attested_model_property">TEE enforced model:</string>
+    <string name="widevine_properties">Widevine Properties</string>
+    <string name="widevine_system_id">Widevine System Id:</string>
+    <string name="widevine_SPOID">Widevine SPOID:</string>
+    <string name="root_of_trust">Root of Trust</string>
+    <string name="verified_boot_key">Verified boot key:</string>
+    <string name="verified_boot_state">Verified boot state:</string>
+    <string name="device_locked">Device locked:</string>
+    <string name="challenge_is_valid">Challenge is valid:</string>
+    <string name="build_fingerprint">ro.build.fingerprint:</string>
+</resources>

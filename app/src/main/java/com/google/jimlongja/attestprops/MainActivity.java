@@ -1,10 +1,7 @@
 package com.google.jimlongja.attestprops;
 
 import android.app.Activity;
-import android.app.admin.DevicePolicyManager;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -12,18 +9,18 @@ import android.widget.TextView;
 import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.jimlongja.attestprops.Models.Nonce;
 import com.google.jimlongja.attestprops.Models.Challenge;
+import com.google.jimlongja.attestprops.Models.Nonce;
 import com.google.jimlongja.attestprops.Utils.Attestation;
 import com.google.jimlongja.attestprops.Utils.AuthorizationList;
 import com.google.jimlongja.attestprops.Utils.RootOfTrust;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+
+import androidx.annotation.VisibleForTesting;
 
 import static android.os.Build.BRAND;
 import static android.os.Build.DEVICE;
@@ -33,23 +30,24 @@ import static android.os.Build.PRODUCT;
 
 public class MainActivity extends Activity {
 
-    private static final String HARDWARE_DEVICE_UNIQUE_ATTESTATION =
+    @VisibleForTesting
+    protected static final String HARDWARE_DEVICE_UNIQUE_ATTESTATION =
             "android.hardware.device_unique_attestation";
-    private static final String SOFTWARE_DEVICE_ID_ATTESTATION =
+    @VisibleForTesting
+    protected static final String SOFTWARE_DEVICE_ID_ATTESTATION =
             "android.software.device_id_attestation";
     private static final String BUILD_FINGERPRINT = "ro.build.fingerprint";
-    private static final String DEVICE_TMP_FOLDER = "/data/local/tmp/";
 
     private static final String ANDROID_SYSTEM_PROPERTIES_CLASS = "android.os.SystemProperties";
     private static final String TAG = "AttestProps";
     private static final long ONE_MINUTE_IN_MILLIS=60000;
+    @VisibleForTesting
     private Challenge mChallenge;
     private WidevineProperties mWidevineProperties = new WidevineProperties();
 
     private TextView mTvSoftwareIdAttestationSupported;
     private TextView mTvHardwareIdAttestationSupported;
     private TextView mTvVerifiedBootSupported;
-    private TextView mTvDeviceIdAttestationSupported;
     private TextView mTvDevicePropertiesAttestationSupported;
 
     private TextView mTvBrandProperty;
@@ -104,7 +102,6 @@ public class MainActivity extends Activity {
         mTvSoftwareIdAttestationSupported = (TextView) findViewById(R.id.software_id_attestation_supported);
         mTvHardwareIdAttestationSupported = (TextView) findViewById(R.id.hardware_id_attestation_supported);
         mTvVerifiedBootSupported = (TextView) findViewById(R.id.verified_boot_supported);
-        mTvDeviceIdAttestationSupported = (TextView) findViewById(R.id.device_id_attestation_supported);
         mTvDevicePropertiesAttestationSupported = (TextView) findViewById(R.id.device_properties_attestation_supported);
 
         mTvBrandProperty = (TextView) findViewById(R.id.brand_property);
@@ -154,10 +151,6 @@ public class MainActivity extends Activity {
                 R.string.verified_boot_supported,
                 Boolean.toString(hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT)));
 
-        logAndUpdateTextView(
-                mTvDeviceIdAttestationSupported,
-                R.string.device_id_attestation_supported,
-                Boolean.toString(isDeviceIdAttestationSupported()));
 
         Log.i(TAG," ");
 
@@ -262,17 +255,10 @@ public class MainActivity extends Activity {
 
         return result;
     }
-
-    private boolean hasSystemFeature(String feature) {
+    @VisibleForTesting
+    protected boolean hasSystemFeature(String feature) {
         PackageManager pm = getApplication().getPackageManager();
         return pm.hasSystemFeature(feature);
-    }
-
-    private boolean isDeviceIdAttestationSupported() {
-        DevicePolicyManager dpm =
-                (DevicePolicyManager) getApplication().getSystemService(Context.DEVICE_POLICY_SERVICE);
-        assert dpm != null;
-        return dpm.isDeviceIdAttestationSupported();
     }
 
 }

@@ -5,7 +5,6 @@
     <string name="software_id_attestation_supported">Software ID Attestation Supported:</string>
     <string name="hardware_id_attestation_supported">Hardware ID Attestation Supported:</string>
     <string name="verified_boot_supported">Verified Boot Supported:</string>
-    <string name="device_id_attestation_supported">Device ID Attestation Supported:</string>
     <string name="device_properties_attestation_supported">Device Properties Attestation Supported:</string>
     <string name="device_properties">Device Properties</string>
     <string name="brand_property">ro.product.brand:</string>

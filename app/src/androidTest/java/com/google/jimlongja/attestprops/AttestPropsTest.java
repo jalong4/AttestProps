@@ -2,10 +2,10 @@ package com.google.jimlongja.attestprops;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
 import com.google.jimlongja.attestprops.Utils.Attestation;
 import com.google.jimlongja.attestprops.Utils.AuthorizationList;
 import com.google.jimlongja.attestprops.Utils.RootOfTrust;
@@ -45,12 +45,12 @@ public class AttestPropsTest {
     }
     @Test
     public void SoftwareIDAttestationIsSupported() {
-        Assert.assertTrue(mPm.hasSystemFeature(MainActivity.SOFTWARE_DEVICE_ID_ATTESTATION));
+        Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
     }
 
     @Test
     public void HardwareIDAttestationIsSupported() {
-        Assert.assertTrue(mPm.hasSystemFeature(MainActivity.SOFTWARE_DEVICE_ID_ATTESTATION));
+        Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
     }
 
     @Test
@@ -60,7 +60,7 @@ public class AttestPropsTest {
 
     @Test
     public void DevicePropertiesAttestationSupported() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
         AttestPropsAsyncTaskReturnParams params = getAttestPropsAsyncTaskReturnParams();
 
         Boolean result = false;
@@ -87,7 +87,7 @@ public class AttestPropsTest {
 
     @Test
     public void AttestedBrandPropertyMatches() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
 
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getBrand() == BRAND);
@@ -95,28 +95,28 @@ public class AttestPropsTest {
 
     @Test
     public void AttestedDevicePropertyMatches() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice() == DEVICE);
     }
 
     @Test
     public void AttestedProductPropertyMatches() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct() == PRODUCT);
     }
 
     @Test
     public void AttestedManufacturerPropertyMatches() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getManufacturer() == MANUFACTURER);
     }
 
     @Test
     public void AttestedModelPropertyMatches() {
-        assumeTrue("Skipping ...", Build.VERSION.SDK_INT > 30);
+        assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() == MODEL);
     }
@@ -180,6 +180,14 @@ public class AttestPropsTest {
             e.printStackTrace();
         }
         return result.get();
+    }
+
+    private boolean shouldRunNewTests() {
+        // Temporary until SDK gets updated to 31 for Android S
+        String osName = new AttestPropsUtils()
+                .getSystemProperty("ro.product.build.version.release_or_codename");
+        return osName.equals("S");
+//        return Build.VERSION.SDK_INT > 30;
     }
 
 }

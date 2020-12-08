@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.jimlongja.attestprops.Models.Challenge;
 import com.google.jimlongja.attestprops.Models.Nonce;
+import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
 import com.google.jimlongja.attestprops.Utils.Attestation;
 import com.google.jimlongja.attestprops.Utils.AuthorizationList;
 import com.google.jimlongja.attestprops.Utils.RootOfTrust;
@@ -27,21 +28,15 @@ import static android.os.Build.DEVICE;
 import static android.os.Build.MANUFACTURER;
 import static android.os.Build.MODEL;
 import static android.os.Build.PRODUCT;
+import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
+import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
 
 public class MainActivity extends Activity {
 
-    @VisibleForTesting
-    protected static final String HARDWARE_DEVICE_UNIQUE_ATTESTATION =
-            "android.hardware.device_unique_attestation";
-    @VisibleForTesting
-    protected static final String SOFTWARE_DEVICE_ID_ATTESTATION =
-            "android.software.device_id_attestation";
     private static final String BUILD_FINGERPRINT = "ro.build.fingerprint";
 
-    private static final String ANDROID_SYSTEM_PROPERTIES_CLASS = "android.os.SystemProperties";
     private static final String TAG = "AttestProps";
     private static final long ONE_MINUTE_IN_MILLIS=60000;
-    @VisibleForTesting
     private Challenge mChallenge;
     private WidevineProperties mWidevineProperties = new WidevineProperties();
 
@@ -163,21 +158,7 @@ public class MainActivity extends Activity {
         logAndUpdateTextView(
                 mTvBuildFingerprint,
                 R.string.build_fingerprint,
-                getSystemProperty(BUILD_FINGERPRINT));
-    }
-
-    private String getSystemProperty(String prop) {
-
-        String defaultValue = "";
-        try {
-            Class<?> systemProperties = Class.forName(ANDROID_SYSTEM_PROPERTIES_CLASS);
-            Method getMethod = systemProperties.getMethod("get", String.class);
-            String value = (String) getMethod.invoke(systemProperties, prop);
-            return "".equals(value) ? defaultValue : value;
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to read " + prop, e);
-            return defaultValue;
-        }
+                new AttestPropsUtils().getSystemProperty(BUILD_FINGERPRINT));
     }
 
     private void updateUIandLogOutput(X509Certificate x509cert,
@@ -255,8 +236,8 @@ public class MainActivity extends Activity {
 
         return result;
     }
-    @VisibleForTesting
-    protected boolean hasSystemFeature(String feature) {
+
+    private boolean hasSystemFeature(String feature) {
         PackageManager pm = getApplication().getPackageManager();
         return pm.hasSystemFeature(feature);
     }

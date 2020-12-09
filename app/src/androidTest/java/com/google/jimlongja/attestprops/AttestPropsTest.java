@@ -44,17 +44,17 @@ public class AttestPropsTest {
         mPm = appContext.getPackageManager();
     }
     @Test
-    public void SoftwareIDAttestationIsSupported() {
+    public void softwareIDAttestationIsSupported() {
         Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
     }
 
     @Test
-    public void HardwareIDAttestationIsSupported() {
+    public void hardwareIDAttestationIsSupported() {
         Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
     }
 
     @Test
-    public void VerifiedBootIsSupported() {
+    public void verifiedBootIsSupported() {
         Assert.assertTrue(mPm.hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT));
     }
 
@@ -71,13 +71,13 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void AttestationReturnsTeeEnforcedX509Certification() {
+    public void attestationReturnsTeeEnforcedX509Certification() {
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null);
     }
 
     @Test
-    public void VerifiedBootStateIsVerified() {
+    public void verifiedBootStateIsVerified() {
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null
                 && teeEnforced.getRootOfTrust() != null
@@ -86,7 +86,7 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void AttestedBrandPropertyMatches() {
+    public void attestedBrandPropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
 
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
@@ -94,35 +94,35 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void AttestedDevicePropertyMatches() {
+    public void attestedDevicePropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice() == DEVICE);
     }
 
     @Test
-    public void AttestedProductPropertyMatches() {
+    public void attestedProductPropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct() == PRODUCT);
     }
 
     @Test
-    public void AttestedManufacturerPropertyMatches() {
+    public void attestedManufacturerPropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getManufacturer() == MANUFACTURER);
     }
 
     @Test
-    public void AttestedModelPropertyMatches() {
+    public void attestedModelPropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() == MODEL);
     }
 
     @Test
-    public void ChallengeInCertMatches() {
+    public void challengeInCertMatches() {
         Attestation attestation = getAttestation();
         Assert.assertTrue(attestation != null
                 && new String(

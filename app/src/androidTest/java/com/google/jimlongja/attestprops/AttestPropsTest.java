@@ -34,14 +34,18 @@ import static org.junit.Assume.assumeTrue;
 @RunWith(AndroidJUnit4.class)
 public class AttestPropsTest {
 
+    private Context mAppContext;
     private PackageManager mPm;
+    private AttestPropsUtils mAttestPropsUtils;
+
     private static final String CHALLENGE = "test challenge";
 
 
     @Before
     public void setUp() {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        mPm = appContext.getPackageManager();
+        mAppContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        mPm = mAppContext.getPackageManager();
+        mAttestPropsUtils = new AttestPropsUtils();
     }
     @Test
     public void softwareIDAttestationIsSupported() {
@@ -61,13 +65,8 @@ public class AttestPropsTest {
     @Test
     public void DevicePropertiesAttestationSupported() {
         assumeTrue("Skipping ...", shouldRunNewTests());
-        AttestPropsAsyncTaskReturnParams params = getAttestPropsAsyncTaskReturnParams();
-
-        Boolean result = false;
-        if (params != null) {
-            result = params.isDevicePropertyAttestationSupported;
-        }
-        Assert.assertTrue(result);
+        mAttestPropsUtils.getAttestationCertificate(mAppContext, CHALLENGE);
+        Assert.assertTrue(mAttestPropsUtils.isDevicePropertyAttestationSupported());
     }
 
     @Test

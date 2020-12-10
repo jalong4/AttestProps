@@ -11,7 +11,7 @@ import com.google.jimlongja.attestprops.Utils.AuthorizationList;
 import com.google.jimlongja.attestprops.Utils.RootOfTrust;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,39 +34,49 @@ import static org.junit.Assume.assumeTrue;
 @RunWith(AndroidJUnit4.class)
 public class AttestPropsTest {
 
-    private Context mAppContext;
-    private PackageManager mPm;
-    private AttestPropsUtils mAttestPropsUtils;
+    private static Context sAppContext;
+    private static AttestPropsUtils sAttestPropsUtils;
+    private static X509Certificate sX509Certificate;
+    private static boolean sIsDevicePropertyAttestationSupported = false;
+    private static boolean sDevicePropertyAttestationFailed = false;
 
     private static final String CHALLENGE = "test challenge";
 
 
-    @Before
-    public void setUp() {
-        mAppContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        mPm = mAppContext.getPackageManager();
-        mAttestPropsUtils = new AttestPropsUtils();
+    @BeforeClass
+    public static void setUp() {
+        sAppContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        sAttestPropsUtils = new AttestPropsUtils();
+        sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE);
+        sIsDevicePropertyAttestationSupported =
+                sAttestPropsUtils.isDevicePropertyAttestationSupported();
+        sDevicePropertyAttestationFailed = sAttestPropsUtils.didDevicePropertyAttestationFail();
+        if (sIsDevicePropertyAttestationSupported && sDevicePropertyAttestationFailed) {
+            sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE,
+                    false);
+        }
     }
     @Test
     public void softwareIDAttestationIsSupported() {
-        Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
+        Assert.assertTrue(sAppContext.getPackageManager()
+                        .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
     }
 
     @Test
     public void hardwareIDAttestationIsSupported() {
-        Assert.assertTrue(mPm.hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
+        Assert.assertTrue(sAppContext.getPackageManager()
+                .hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
     }
 
     @Test
     public void verifiedBootIsSupported() {
-        Assert.assertTrue(mPm.hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT));
+        Assert.assertTrue(sAppContext.getPackageManager()
+                .hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT));
     }
 
     @Test
     public void DevicePropertiesAttestationSupported() {
-        assumeTrue("Skipping ...", shouldRunNewTests());
-        mAttestPropsUtils.getAttestationCertificate(mAppContext, CHALLENGE);
-        Assert.assertTrue(mAttestPropsUtils.isDevicePropertyAttestationSupported());
+        Assert.assertTrue(sAttestPropsUtils.isDevicePropertyAttestationSupported());
     }
 
     @Test
@@ -76,12 +86,18 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void verifiedBootStateIsVerified() {
-        AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null
-                && teeEnforced.getRootOfTrust() != null
-                && teeEnforced.getRootOfTrust().getVerifiedBootState()
+    public void testBootState() {
+        RootOfTrust rootOfTrust = getRootOfTrust();
+        Assert.assertTrue(rootOfTrust != null
+                && rootOfTrust.getVerifiedBootState()
                 == RootOfTrust.KM_VERIFIED_BOOT_VERIFIED);
+    }
+
+    @Test
+    public void testDeviceIsLocked() {
+        RootOfTrust rootOfTrust = getRootOfTrust();
+        Assert.assertTrue(rootOfTrust != null
+                && rootOfTrust.isDeviceLocked());
     }
 
     @Test
@@ -121,12 +137,27 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void challengeInCertMatches() {
+    public void testChallenge() {
+        String challenge = getChallenge();
+        Assert.assertTrue(challenge != null
+                && challenge.equals(CHALLENGE));
+    }
+
+    private String getChallenge() {
         Attestation attestation = getAttestation();
-        Assert.assertTrue(attestation != null
-                && new String(
-                attestation.getAttestationChallenge(), StandardCharsets.UTF_8)
-                .equals(CHALLENGE));
+        if (attestation == null) {
+            return null;
+        }
+        return new String(
+                attestation.getAttestationChallenge(), StandardCharsets.UTF_8);
+    }
+
+    private RootOfTrust getRootOfTrust() {
+        AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
+        if (teeEnforced == null) {
+            return null;
+        }
+        return teeEnforced.getRootOfTrust();
     }
 
     private AuthorizationList getTeeEnforcedAuthorizationList() {
@@ -140,18 +171,30 @@ public class AttestPropsTest {
     }
 
     private Attestation getAttestation() {
-        AttestPropsAsyncTaskReturnParams params = getAttestPropsAsyncTaskReturnParams();
         Attestation result = null;
-
-        if (params != null && params.x509Certificate != null) {
+        if (sX509Certificate != null) {
             try {
-                result = new Attestation(params.x509Certificate);
+                result = new Attestation(sX509Certificate);
             } catch (CertificateParsingException e) {
                 e.printStackTrace();
             }
         }
         return result;
     }
+
+//    private Attestation getAttestation() {
+//        AttestPropsAsyncTaskReturnParams params = getAttestPropsAsyncTaskReturnParams();
+//        Attestation result = null;
+//
+//        if (params != null && params.x509Certificate != null) {
+//            try {
+//                result = new Attestation(params.x509Certificate);
+//            } catch (CertificateParsingException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return result;
+//    }
 
     private AttestPropsAsyncTaskReturnParams getAttestPropsAsyncTaskReturnParams() {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -182,11 +225,7 @@ public class AttestPropsTest {
     }
 
     private boolean shouldRunNewTests() {
-        // Temporary until SDK gets updated to 31 for Android S
-        String osName = new AttestPropsUtils()
-                .getSystemProperty("ro.product.build.version.release_or_codename");
-        return osName.equals("S");
-//        return Build.VERSION.SDK_INT > 30;
+        return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
     }
 
 }

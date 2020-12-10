@@ -128,7 +128,7 @@ public class AttestPropsUtils {
     }
 
     public X509Certificate getAttestationCertificate(Context context, String challenge) {
-        return getAttestationCertificate(context, challenge, false);
+        return getAttestationCertificate(context, challenge, true);
     }
 
     public X509Certificate getAttestationCertificate(Context context, String challenge,

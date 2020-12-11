@@ -10,6 +10,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AttestPropsTest {
 
     private static final String CHALLENGE = "test challenge";
+    private static final String TAG = AttestPropsTest.class.getSimpleName();
     private static Context sAppContext;
     private static AttestPropsUtils sAttestPropsUtils;
     private static X509Certificate sX509Certificate;
@@ -57,18 +59,6 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void softwareIDAttestationIsSupported() {
-        Assert.assertTrue(sAppContext.getPackageManager()
-                .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
-    }
-
-    @Test
-    public void hardwareIDAttestationIsSupported() {
-        Assert.assertTrue(sAppContext.getPackageManager()
-                .hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
-    }
-
-    @Test
     public void verifiedBootIsSupported() {
         Assert.assertTrue(sAppContext.getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT));
@@ -80,8 +70,9 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestationReturnsTeeEnforcedX509Certification() {
+    public void testTeeEnforcedAttestation() {
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
+        Log.d(TAG, teeEnforced.toString());
         Assert.assertTrue(teeEnforced != null);
     }
 
@@ -101,7 +92,7 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestedBrandPropertyMatches() {
+    public void attestedBrandProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
 
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
@@ -109,21 +100,21 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestedDevicePropertyMatches() {
+    public void attestedDeviceProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice() == DEVICE);
     }
 
     @Test
-    public void attestedProductPropertyMatches() {
+    public void attestedProductProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct() == PRODUCT);
     }
 
     @Test
-    public void attestedManufacturerPropertyMatches() {
+    public void attestedManufacturerProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null
@@ -131,7 +122,7 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestedModelPropertyMatches() {
+    public void attestedModelProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() == MODEL);
@@ -161,6 +152,7 @@ public class AttestPropsTest {
         return teeEnforced.getRootOfTrust();
     }
 
+
     private AuthorizationList getTeeEnforcedAuthorizationList() {
         Attestation attestation = getAttestation();
         return (attestation == null) ? null : attestation.getTeeEnforced();
@@ -178,44 +170,8 @@ public class AttestPropsTest {
         return result;
     }
 
-    private AttestPropsAsyncTaskReturnParams getAttestPropsAsyncTaskReturnParams() {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<AttestPropsAsyncTaskReturnParams> result =
-                new AtomicReference<>(null);
-
-        new AttestPropsAsyncTask().execute(new AttestPropsAsyncTaskParams(
-                appContext,
-                CHALLENGE,
-                (x509cert, isDevicePropertyAttestationSupported) -> {
-                    AttestPropsAsyncTaskReturnParams params =
-                            new AttestPropsAsyncTaskReturnParams();
-                    params.x509Certificate = x509cert;
-                    params.isDevicePropertyAttestationSupported =
-                            isDevicePropertyAttestationSupported;
-                    result.set(params);
-                    latch.countDown();
-                }
-        ));
-
-        //Wait for api response async
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return result.get();
-    }
-
     private boolean shouldRunNewTests() {
         return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
-    }
-
-    private static class AttestPropsAsyncTaskReturnParams {
-        X509Certificate x509Certificate;
-        Boolean isDevicePropertyAttestationSupported;
     }
 
 }

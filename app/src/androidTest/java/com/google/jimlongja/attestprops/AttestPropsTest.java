@@ -1,14 +1,25 @@
 package com.google.jimlongja.attestprops;
 
+import static android.os.Build.BRAND;
+import static android.os.Build.DEVICE;
+import static android.os.Build.MANUFACTURER;
+import static android.os.Build.MODEL;
+import static android.os.Build.PRODUCT;
+
+import static org.junit.Assume.assumeTrue;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
-import com.google.jimlongja.attestprops.Utils.Attestation;
-import com.google.jimlongja.attestprops.Utils.AuthorizationList;
-import com.google.jimlongja.attestprops.Utils.RootOfTrust;
+import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
+import com.google.jimlongja.attestprops.utils.Attestation;
+import com.google.jimlongja.attestprops.utils.AuthorizationList;
+import com.google.jimlongja.attestprops.utils.RootOfTrust;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -21,27 +32,15 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import static android.os.Build.BRAND;
-import static android.os.Build.DEVICE;
-import static android.os.Build.MANUFACTURER;
-import static android.os.Build.MODEL;
-import static android.os.Build.PRODUCT;
-import static org.junit.Assume.assumeTrue;
-
 @RunWith(AndroidJUnit4.class)
 public class AttestPropsTest {
 
+    private static final String CHALLENGE = "test challenge";
     private static Context sAppContext;
     private static AttestPropsUtils sAttestPropsUtils;
     private static X509Certificate sX509Certificate;
     private static boolean sIsDevicePropertyAttestationSupported = false;
     private static boolean sDevicePropertyAttestationFailed = false;
-
-    private static final String CHALLENGE = "test challenge";
-
 
     @BeforeClass
     public static void setUp() {
@@ -56,10 +55,11 @@ public class AttestPropsTest {
                     false);
         }
     }
+
     @Test
     public void softwareIDAttestationIsSupported() {
         Assert.assertTrue(sAppContext.getPackageManager()
-                        .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
+                .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
     }
 
     @Test
@@ -126,7 +126,8 @@ public class AttestPropsTest {
     public void attestedManufacturerPropertyMatches() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getManufacturer() == MANUFACTURER);
+        Assert.assertTrue(teeEnforced != null
+                && teeEnforced.getManufacturer() == MANUFACTURER);
     }
 
     @Test
@@ -165,11 +166,6 @@ public class AttestPropsTest {
         return (attestation == null) ? null : attestation.getTeeEnforced();
     }
 
-    private static class AttestPropsAsyncTaskReturnParams {
-        X509Certificate x509Certificate;
-        Boolean isDevicePropertyAttestationSupported;
-    }
-
     private Attestation getAttestation() {
         Attestation result = null;
         if (sX509Certificate != null) {
@@ -180,6 +176,37 @@ public class AttestPropsTest {
             }
         }
         return result;
+    }
+
+    private AttestPropsAsyncTaskReturnParams getAttestPropsAsyncTaskReturnParams() {
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<AttestPropsAsyncTaskReturnParams> result =
+                new AtomicReference<>(null);
+
+        new AttestPropsAsyncTask().execute(new AttestPropsAsyncTaskParams(
+                appContext,
+                CHALLENGE,
+                (x509cert, isDevicePropertyAttestationSupported) -> {
+                    AttestPropsAsyncTaskReturnParams params =
+                            new AttestPropsAsyncTaskReturnParams();
+                    params.x509Certificate = x509cert;
+                    params.isDevicePropertyAttestationSupported =
+                            isDevicePropertyAttestationSupported;
+                    result.set(params);
+                    latch.countDown();
+                }
+        ));
+
+        //Wait for api response async
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return result.get();
     }
 
 //    private Attestation getAttestation() {
@@ -196,36 +223,13 @@ public class AttestPropsTest {
 //        return result;
 //    }
 
-    private AttestPropsAsyncTaskReturnParams getAttestPropsAsyncTaskReturnParams() {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<AttestPropsAsyncTaskReturnParams> result = new AtomicReference<>(null);
-
-        new AttestPropsAsyncTask().execute(new AttestPropsAsyncTaskParams(
-                appContext,
-                CHALLENGE,
-                (x509cert, isDevicePropertyAttestationSupported) -> {
-                    AttestPropsAsyncTaskReturnParams params = new AttestPropsAsyncTaskReturnParams();
-                    params.x509Certificate = x509cert;
-                    params.isDevicePropertyAttestationSupported = isDevicePropertyAttestationSupported;
-                        result.set(params);
-                        latch.countDown();
-                }
-        ));
-
-        //Wait for api response async
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return result.get();
-    }
-
     private boolean shouldRunNewTests() {
         return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
+    }
+
+    private static class AttestPropsAsyncTaskReturnParams {
+        X509Certificate x509Certificate;
+        Boolean isDevicePropertyAttestationSupported;
     }
 
 }

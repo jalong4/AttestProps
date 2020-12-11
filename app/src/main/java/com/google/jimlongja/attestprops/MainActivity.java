@@ -11,25 +11,22 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.jimlongja.attestprops.Models.Challenge;
 import com.google.jimlongja.attestprops.Models.Nonce;
-import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
-import com.google.jimlongja.attestprops.Utils.Attestation;
-import com.google.jimlongja.attestprops.Utils.AuthorizationList;
-import com.google.jimlongja.attestprops.Utils.RootOfTrust;
+import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
+import com.google.jimlongja.attestprops.utils.Attestation;
+import com.google.jimlongja.attestprops.utils.AuthorizationList;
+import com.google.jimlongja.attestprops.utils.RootOfTrust;
 
-import java.lang.reflect.Method;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-
-import androidx.annotation.VisibleForTesting;
 
 import static android.os.Build.BRAND;
 import static android.os.Build.DEVICE;
 import static android.os.Build.MANUFACTURER;
 import static android.os.Build.MODEL;
 import static android.os.Build.PRODUCT;
-import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
-import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
+import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
+import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
 
 public class MainActivity extends Activity {
 

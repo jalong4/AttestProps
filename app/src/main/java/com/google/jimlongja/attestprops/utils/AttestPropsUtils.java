@@ -1,13 +1,12 @@
-package com.google.jimlongja.attestprops.Utils;;
+package com.google.jimlongja.attestprops.utils;
 
 import android.content.Context;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-
 import android.util.Log;
-import java.lang.reflect.Method;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -39,10 +38,10 @@ public class AttestPropsUtils {
 
     private static final String TAG = "AttestPropsUtils";
 
-    private boolean mIsDevicePropertyAttestationSupported = true;
+    private boolean mIsDevicePropertyAttestationSupported = false;
     private boolean mDevicePropertyAttestationFailed = false;
 
-    public AttestPropsUtils() { 
+    public AttestPropsUtils() {
     }
 
     public boolean isDevicePropertyAttestationSupported() {
@@ -75,7 +74,8 @@ public class AttestPropsUtils {
         Date KeyValidyForComsumptionnEnd =
                 new Date(KeyValidityStart.getTime() + CONSUMPTION_TIME_OFFSET);
 
-        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(KEYSTORE_ALIAS, KeyProperties.PURPOSE_SIGN)
+        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(KEYSTORE_ALIAS,
+                KeyProperties.PURPOSE_SIGN)
                 .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
                 .setDigests(KeyProperties.DIGEST_SHA256,
                         KeyProperties.DIGEST_SHA384,
@@ -83,7 +83,10 @@ public class AttestPropsUtils {
 
                 .setUserAuthenticationRequired(false)
                 .setAttestationChallenge(challenge.getBytes())
+
+//                uncomment this line when SDK for S is available
 //                .setDevicePropertiesAttestationIncluded(true)
+
                 .setKeyValidityStart(KeyValidityStart)
                 .setKeyValidityForOriginationEnd(KeyValidyForOriginationEnd)
                 .setKeyValidityForConsumptionEnd(KeyValidyForComsumptionnEnd);
@@ -101,8 +104,9 @@ public class AttestPropsUtils {
 
         if (attestDeviceProperties) {
             try {
-                ReflectionUtil.invoke(builder, "setDevicePropertiesAttestationIncluded", new Class<?>[]{boolean.class}, true);
-
+                ReflectionUtil.invoke(builder, "setDevicePropertiesAttestationIncluded",
+                        new Class<?>[]{boolean.class}, true);
+                mIsDevicePropertyAttestationSupported = true;
             } catch (ReflectionUtil.ReflectionIsTemporaryException e) {
                 mIsDevicePropertyAttestationSupported = false;
             }
@@ -117,7 +121,9 @@ public class AttestPropsUtils {
 
     private List<Certificate> getCertificateChainFromKeyStore(
             KeyPairGenerator keyPairGenerator,
-            KeyGenParameterSpec keyGenParameterSpec) throws InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+            KeyGenParameterSpec keyGenParameterSpec) throws InvalidAlgorithmParameterException,
+            KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException,
+            InvalidKeyException {
 
         keyPairGenerator.initialize(keyGenParameterSpec);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
@@ -132,7 +138,7 @@ public class AttestPropsUtils {
     }
 
     public X509Certificate getAttestationCertificate(Context context, String challenge,
-            boolean attestDeviceProperties) {
+                                                     boolean attestDeviceProperties) {
 
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -143,7 +149,8 @@ public class AttestPropsUtils {
 
             Log.i(TAG, "Generating keypair using keyStore");
 
-            List<Certificate> certificates = getCertificateChainFromKeyStore(keyPairGenerator, keyGenParameterSpec);
+            List<Certificate> certificates = getCertificateChainFromKeyStore(keyPairGenerator,
+                    keyGenParameterSpec);
 
             if (certificates == null || certificates.get(0) == null) {
                 return null;
@@ -157,9 +164,9 @@ public class AttestPropsUtils {
             x509cert.checkValidity();
             return x509cert;
 
-        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException |
-                IOException | NoSuchProviderException | CertificateException  |
-                InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException
+                | IOException | NoSuchProviderException | CertificateException
+                | InvalidKeyException e) {
             e.printStackTrace();
         } catch (ProviderException e) {
             mDevicePropertyAttestationFailed = true;

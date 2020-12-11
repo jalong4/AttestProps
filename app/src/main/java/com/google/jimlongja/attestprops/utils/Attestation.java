@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
-
+package com.google.jimlongja.attestprops.utils;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +31,9 @@ import java.util.Set;
  * contents.
  */
 public class Attestation {
+    public static final int KM_SECURITY_LEVEL_SOFTWARE = 0;
+    public static final int KM_SECURITY_LEVEL_TRUSTED_ENVIRONMENT = 1;
+    public static final int KM_SECURITY_LEVEL_STRONG_BOX = 2;
     static final String KEY_DESCRIPTION_OID = "1.3.6.1.4.1.11129.2.1.17";
     static final String KEY_USAGE_OID = "2.5.29.15";  // Standard key usage extension.
     static final int ATTESTATION_VERSION_INDEX = 0;
@@ -42,20 +44,15 @@ public class Attestation {
     static final int UNIQUE_ID_INDEX = 5;
     static final int SW_ENFORCED_INDEX = 6;
     static final int TEE_ENFORCED_INDEX = 7;
-
-    public static final int KM_SECURITY_LEVEL_SOFTWARE = 0;
-    public static final int KM_SECURITY_LEVEL_TRUSTED_ENVIRONMENT = 1;
-    public static final int KM_SECURITY_LEVEL_STRONG_BOX = 2;
-
-    private final int attestationVersion;
-    private final int attestationSecurityLevel;
-    private final int keymasterVersion;
-    private final int keymasterSecurityLevel;
-    private final byte[] attestationChallenge;
-    private final byte[] uniqueId;
-    private final AuthorizationList softwareEnforced;
-    private final AuthorizationList teeEnforced;
-    private final Set<String> unexpectedExtensionOids;
+    private final int mAttestationVersion;
+    private final int mAttestationSecurityLevel;
+    private final int mKeymasterVersion;
+    private final int mKeymasterSecurityLevel;
+    private final byte[] mAttestationChallenge;
+    private final byte[] mUniqueId;
+    private final AuthorizationList mSoftwareEnforced;
+    private final AuthorizationList mTeeEnforced;
+    private final Set<String> mUnexpectedExtensionOids;
 
 
     /**
@@ -67,20 +64,23 @@ public class Attestation {
      */
     public Attestation(X509Certificate x509Cert) throws CertificateParsingException {
         ASN1Sequence seq = getAttestationSequence(x509Cert);
-        unexpectedExtensionOids = retrieveUnexpectedExtensionOids(x509Cert);
+        mUnexpectedExtensionOids = retrieveUnexpectedExtensionOids(x509Cert);
 
-        attestationVersion = Asn1Utils.getIntegerFromAsn1(seq.getObjectAt(ATTESTATION_VERSION_INDEX));
-        attestationSecurityLevel = Asn1Utils.getIntegerFromAsn1(seq.getObjectAt(ATTESTATION_SECURITY_LEVEL_INDEX));
-        keymasterVersion = Asn1Utils.getIntegerFromAsn1(seq.getObjectAt(KEYMASTER_VERSION_INDEX));
-        keymasterSecurityLevel = Asn1Utils.getIntegerFromAsn1(seq.getObjectAt(KEYMASTER_SECURITY_LEVEL_INDEX));
+        mAttestationVersion = Asn1Utils.getIntegerFromAsn1(
+                seq.getObjectAt(ATTESTATION_VERSION_INDEX));
+        mAttestationSecurityLevel = Asn1Utils.getIntegerFromAsn1(
+                seq.getObjectAt(ATTESTATION_SECURITY_LEVEL_INDEX));
+        mKeymasterVersion = Asn1Utils.getIntegerFromAsn1(seq.getObjectAt(KEYMASTER_VERSION_INDEX));
+        mKeymasterSecurityLevel = Asn1Utils.getIntegerFromAsn1(
+                seq.getObjectAt(KEYMASTER_SECURITY_LEVEL_INDEX));
 
-        attestationChallenge =
-                Asn1Utils.getByteArrayFromAsn1(seq.getObjectAt(Attestation.ATTESTATION_CHALLENGE_INDEX));
+        mAttestationChallenge = Asn1Utils.getByteArrayFromAsn1(
+                seq.getObjectAt(Attestation.ATTESTATION_CHALLENGE_INDEX));
 
-        uniqueId = Asn1Utils.getByteArrayFromAsn1(seq.getObjectAt(Attestation.UNIQUE_ID_INDEX));
+        mUniqueId = Asn1Utils.getByteArrayFromAsn1(seq.getObjectAt(Attestation.UNIQUE_ID_INDEX));
 
-        softwareEnforced = new AuthorizationList(seq.getObjectAt(SW_ENFORCED_INDEX));
-        teeEnforced = new AuthorizationList(seq.getObjectAt(TEE_ENFORCED_INDEX));
+        mSoftwareEnforced = new AuthorizationList(seq.getObjectAt(SW_ENFORCED_INDEX));
+        mTeeEnforced = new AuthorizationList(seq.getObjectAt(TEE_ENFORCED_INDEX));
     }
 
     public static String securityLevelToString(int attestationSecurityLevel) {
@@ -92,69 +92,69 @@ public class Attestation {
             case KM_SECURITY_LEVEL_STRONG_BOX:
                 return "StrongBox";
             default:
-                return "Unkown";
+                return "Unknown";
         }
     }
 
     public int getAttestationVersion() {
-        return attestationVersion;
+        return mAttestationVersion;
     }
 
     public int getAttestationSecurityLevel() {
-        return attestationSecurityLevel;
+        return mAttestationSecurityLevel;
     }
 
     public int getKeymasterVersion() {
-        return keymasterVersion;
+        return mKeymasterVersion;
     }
 
     public int getKeymasterSecurityLevel() {
-        return keymasterSecurityLevel;
+        return mKeymasterSecurityLevel;
     }
 
     public byte[] getAttestationChallenge() {
-        return attestationChallenge;
+        return mAttestationChallenge;
     }
 
     public byte[] getUniqueId() {
-        return uniqueId;
+        return mUniqueId;
     }
 
     public AuthorizationList getSoftwareEnforced() {
-        return softwareEnforced;
+        return mSoftwareEnforced;
     }
 
     public AuthorizationList getTeeEnforced() {
-        return teeEnforced;
+        return mTeeEnforced;
     }
 
     public Set<String> getUnexpectedExtensionOids() {
-        return unexpectedExtensionOids;
+        return mUnexpectedExtensionOids;
     }
 
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
-        s.append("Attest version: " + attestationVersion);
-        s.append("\nAttest security: " + securityLevelToString(attestationSecurityLevel));
-        s.append("\nKM version: " + keymasterVersion);
-        s.append("\nKM security: " + securityLevelToString(keymasterSecurityLevel));
+        s.append("Attest version: " + mAttestationVersion);
+        s.append("\nAttest security: " + securityLevelToString(mAttestationSecurityLevel));
+        s.append("\nKM version: " + mKeymasterVersion);
+        s.append("\nKM security: " + securityLevelToString(mKeymasterSecurityLevel));
 
         s.append("\nChallenge");
-        String stringChallenge = new String(attestationChallenge);
+        String stringChallenge = new String(mAttestationChallenge);
         if (CharMatcher.ascii().matchesAllOf(stringChallenge)) {
             s.append(": [" + stringChallenge + "]");
         } else {
-            s.append(" (base64): [" + BaseEncoding.base64().encode(attestationChallenge) + "]");
+            s.append(" (base64): [" + BaseEncoding.base64().encode(mAttestationChallenge) + "]");
         }
-        if (uniqueId != null) {
-            s.append("\nUnique ID (base64): [" + BaseEncoding.base64().encode(uniqueId) + "]");
+        if (mUniqueId != null) {
+            s.append("\nUnique ID (base64): [" + BaseEncoding.base64().encode(mUniqueId) + "]");
         }
 
         s.append("\n-- SW enforced --");
-        s.append(softwareEnforced);
+        s.append(mSoftwareEnforced);
         s.append("\n-- TEE enforced --");
-        s.append(teeEnforced);
+        s.append(mTeeEnforced);
 
         return s.toString();
     }

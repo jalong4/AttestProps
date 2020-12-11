@@ -209,20 +209,6 @@ public class AttestPropsTest {
         return result.get();
     }
 
-//    private Attestation getAttestation() {
-//        AttestPropsAsyncTaskReturnParams params = getAttestPropsAsyncTaskReturnParams();
-//        Attestation result = null;
-//
-//        if (params != null && params.x509Certificate != null) {
-//            try {
-//                result = new Attestation(params.x509Certificate);
-//            } catch (CertificateParsingException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return result;
-//    }
-
     private boolean shouldRunNewTests() {
         return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
     }

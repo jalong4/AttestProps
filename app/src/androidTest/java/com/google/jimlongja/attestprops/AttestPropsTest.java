@@ -51,12 +51,27 @@ public class AttestPropsTest {
         sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE);
         sIsDevicePropertyAttestationSupported =
                 sAttestPropsUtils.isDevicePropertyAttestationSupported();
+        sDevicePropertyAttestationFailed =
+                sAttestPropsUtils.didDevicePropertyAttestationFail();
         sDevicePropertyAttestationFailed = sAttestPropsUtils.didDevicePropertyAttestationFail();
         if (sIsDevicePropertyAttestationSupported && sDevicePropertyAttestationFailed) {
             sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE,
                     false);
         }
     }
+
+    @Test
+    public void softwareIDAttestationIsSupported() {
+        Assert.assertTrue(sAppContext.getPackageManager()
+                .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
+    }
+
+    @Test
+    public void hardwareDeviceUniqueAttestationIsSupported() {
+        Assert.assertTrue(sAppContext.getPackageManager()
+                .hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
+    }
+
 
     @Test
     public void verifiedBootIsSupported() {
@@ -96,21 +111,21 @@ public class AttestPropsTest {
         assumeTrue("Skipping ...", shouldRunNewTests());
 
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getBrand() == BRAND);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getBrand().equals(BRAND));
     }
 
     @Test
     public void attestedDeviceProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice() == DEVICE);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice().equals(DEVICE));
     }
 
     @Test
     public void attestedProductProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct() == PRODUCT);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct().equals(PRODUCT));
     }
 
     @Test
@@ -118,14 +133,14 @@ public class AttestPropsTest {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
         Assert.assertTrue(teeEnforced != null
-                && teeEnforced.getManufacturer() == MANUFACTURER);
+                && teeEnforced.getManufacturer().equals(MANUFACTURER));
     }
 
     @Test
     public void attestedModelProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() == MODEL);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() .equals(MODEL));
     }
 
     @Test
@@ -171,7 +186,8 @@ public class AttestPropsTest {
     }
 
     private boolean shouldRunNewTests() {
-        return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
+        boolean result = sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
+        return result;
     }
 
 }

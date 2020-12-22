@@ -37,6 +37,8 @@ public class MainActivity extends Activity {
     private Challenge mChallenge;
     private WidevineProperties mWidevineProperties = new WidevineProperties();
 
+    private TextView mTvSoftwareIdAttestationSupported;
+    private TextView mTvHardwareDeviceUniqueAttestationSupported;
     private TextView mTvVerifiedBootSupported;
     private TextView mTvDevicePropertiesAttestationSupported;
 
@@ -89,6 +91,8 @@ public class MainActivity extends Activity {
 
     private void initTextViews() {
 
+        mTvSoftwareIdAttestationSupported = (TextView) findViewById(R.id.software_id_attestation_supported);
+        mTvHardwareDeviceUniqueAttestationSupported = (TextView) findViewById(R.id.hardware_device_unique_attestation_supported);
         mTvVerifiedBootSupported = (TextView) findViewById(R.id.verified_boot_supported);
         mTvDevicePropertiesAttestationSupported = (TextView) findViewById(R.id.device_properties_attestation_supported);
 
@@ -123,6 +127,16 @@ public class MainActivity extends Activity {
     }
 
     private void displayFeaturesAndProperties() {
+
+        logAndUpdateTextView(
+                mTvSoftwareIdAttestationSupported,
+                R.string.software_id_attestation_supported,
+                Boolean.toString(hasSystemFeature(SOFTWARE_DEVICE_ID_ATTESTATION)));
+
+        logAndUpdateTextView(
+                mTvHardwareDeviceUniqueAttestationSupported,
+                R.string.hardware_device_unique_attestation_supported,
+                Boolean.toString(hasSystemFeature(HARDWARE_DEVICE_UNIQUE_ATTESTATION)));
 
         logAndUpdateTextView(
                 mTvVerifiedBootSupported,

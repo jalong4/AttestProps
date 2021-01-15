@@ -22,14 +22,17 @@ public class AttestPropsAsyncTask extends AsyncTask<AttestPropsAsyncTaskParams, 
         if (params.length != 1) {
             return null;
         }
+
+        boolean devicePropertyAttestationFailed = false;
+
         mCallback = params[0].getCallback();
         X509Certificate cert = mAttestPropsUtils.getAttestationCertificate(params[0].getContext(),
                 params[0].getChallenge(), true);
         mIsDevicePropertyAttestationSupported =
                 mAttestPropsUtils.isDevicePropertyAttestationSupported();
-        if (mIsDevicePropertyAttestationSupported
-                &&  mAttestPropsUtils.didDevicePropertyAttestationFail()) {
-            Log.d(TAG, "Calling Attestation without DevicePropertyAttestation");
+
+        if (mAttestPropsUtils.didDevicePropertyAttestationFail()) {
+            Log.i(TAG, "Calling Attestation without attesting props");
             cert = mAttestPropsUtils.getAttestationCertificate(params[0].getContext(),
                     params[0].getChallenge(), false);
         }

@@ -16,6 +16,8 @@
 
 package com.google.jimlongja.attestprops.utils;
 
+import android.util.Log;
+
 import com.google.common.collect.ImmutableSet;
 
 import org.bouncycastle.asn1.ASN1Boolean;
@@ -133,18 +135,25 @@ public class Asn1Utils {
     public static Date getDateFromAsn1(ASN1Primitive value) throws CertificateParsingException {
         return new Date(getLongFromAsn1(value));
     }
-
     public static boolean getBooleanFromAsn1(ASN1Encodable value)
+            throws CertificateParsingException {
+        return getBooleanFromAsn1(value, true);
+    }
+
+    public static boolean getBooleanFromAsn1(ASN1Encodable value, boolean strictParsing)
             throws CertificateParsingException {
         if (!(value instanceof ASN1Boolean)) {
             throw new CertificateParsingException(
                     "Expected boolean, found " + value.getClass().getName());
         }
         ASN1Boolean booleanValue = (ASN1Boolean) value;
+        Log.i("===", "booleanValue: " + booleanValue.toString());
         if (booleanValue.equals(ASN1Boolean.TRUE)) {
             return true;
         } else if (booleanValue.equals((ASN1Boolean.FALSE))) {
             return false;
+        } else if (!strictParsing){
+            return true;
         }
 
         throw new CertificateParsingException(

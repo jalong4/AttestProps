@@ -26,5 +26,7 @@
     <string name="verified_boot_state">Verified boot state:</string>
     <string name="device_locked">Device locked:</string>
     <string name="challenge_is_valid">Challenge is valid:</string>
+    <string name="is_der_compliant">DER complaint:</string>
+    <string name="cert_is_valid">Cert Validity:</string>
     <string name="build_fingerprint">ro.build.fingerprint:</string>
 </resources>

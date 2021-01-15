@@ -1,5 +1,14 @@
 package com.google.jimlongja.attestprops;
 
+import static android.os.Build.BRAND;
+import static android.os.Build.DEVICE;
+import static android.os.Build.MANUFACTURER;
+import static android.os.Build.MODEL;
+import static android.os.Build.PRODUCT;
+
+import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
+import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
+
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -16,26 +25,20 @@ import com.google.jimlongja.attestprops.utils.Attestation;
 import com.google.jimlongja.attestprops.utils.AuthorizationList;
 import com.google.jimlongja.attestprops.utils.RootOfTrust;
 
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-
-import static android.os.Build.BRAND;
-import static android.os.Build.DEVICE;
-import static android.os.Build.MANUFACTURER;
-import static android.os.Build.MODEL;
-import static android.os.Build.PRODUCT;
-import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
-import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
 
 public class MainActivity extends Activity {
 
     private static final String BUILD_FINGERPRINT = "ro.build.fingerprint";
 
     private static final String TAG = "AttestProps";
-    private static final long ONE_MINUTE_IN_MILLIS=60000;
+    private static final long ONE_MINUTE_IN_MILLIS = 60000;
     private Challenge mChallenge;
-    private WidevineProperties mWidevineProperties = new WidevineProperties();
+    private final WidevineProperties mWidevineProperties = new WidevineProperties();
 
     private TextView mTvSoftwareIdAttestationSupported;
     private TextView mTvHardwareDeviceUniqueAttestationSupported;
@@ -61,6 +64,8 @@ public class MainActivity extends Activity {
     private TextView mTvVerifiedBootState;
     private TextView mTvDeviceLocked;
     private TextView mTvChallengeIsValid;
+    private TextView mTvIsDERComplaint;
+    private TextView mTvCertIsValid;
 
     private TextView mTvBuildFingerprint;
 
@@ -77,7 +82,7 @@ public class MainActivity extends Activity {
                 new Nonce("MDEyMzQ1Njc4OUFCQ0RFRg==", expiryEpoc),
                 "MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=");
 
-        Log.i(TAG,"Challenge: \n" + gson.toJson(mChallenge));
+        Log.i(TAG, "Challenge: \n" + gson.toJson(mChallenge));
 
         logAndUpdateTextView(mTvWidevineSystemId, R.string.widevine_system_id, mWidevineProperties.getSystemID());
         logAndUpdateTextView(mTvWidevineSPOID, R.string.widevine_SPOID, mWidevineProperties.getSPOID());
@@ -115,6 +120,8 @@ public class MainActivity extends Activity {
         mTvVerifiedBootState = (TextView) findViewById(R.id.verified_boot_state);
         mTvDeviceLocked = (TextView) findViewById(R.id.device_locked);
         mTvChallengeIsValid = (TextView) findViewById(R.id.challenge_is_valid);
+        mTvIsDERComplaint = (TextView) findViewById(R.id.is_der_compliant);
+        mTvCertIsValid = (TextView) findViewById(R.id.cert_is_valid);
 
         mTvBuildFingerprint = (TextView) findViewById(R.id.build_fingerprint);
     }
@@ -144,7 +151,7 @@ public class MainActivity extends Activity {
                 Boolean.toString(hasSystemFeature(PackageManager.FEATURE_VERIFIED_BOOT)));
 
 
-        Log.i(TAG," ");
+        Log.i(TAG, " ");
 
         logAndUpdateTextView(mTvBrandProperty, R.string.brand_property, BRAND);
         logAndUpdateTextView(mTvDeviceProperty, R.string.device_property, DEVICE);
@@ -170,8 +177,23 @@ public class MainActivity extends Activity {
                 R.string.device_properties_attestation_supported,
                 isDevicePropertyAttestationSupported.toString());
 
+        String certStatus = "Valid";
+
         try {
-            Attestation attestation = new Attestation(x509cert);
+            x509cert.checkValidity();
+        } catch (CertificateExpiredException e) {
+            certStatus = e.getMessage();
+        } catch (CertificateNotYetValidException e) {
+            certStatus = e.getMessage();
+        }
+
+        logAndUpdateTextView(mTvCertIsValid, R.string.cert_is_valid, certStatus);
+
+        try {
+            Boolean derComplaint = isDERComplaint(x509cert);
+            logAndUpdateTextView(mTvIsDERComplaint, R.string.is_der_compliant,
+                    derComplaint.toString());
+            Attestation attestation = new Attestation(x509cert, derComplaint);
 
             Log.i(TAG, " ");
 
@@ -212,6 +234,27 @@ public class MainActivity extends Activity {
         }
     }
 
+    private boolean isDERComplaint(X509Certificate x509cert) {
+        // First try with strict parsing
+        Attestation attestation = getAttestation(x509cert, true /* strick parsing */);
+        if (attestation == null) {
+            attestation = getAttestation(x509cert, false);
+            return false;
+        }
+        return true;
+    }
+
+    private Attestation getAttestation(X509Certificate x509cert, boolean strictParsing) {
+        Attestation result = null;
+        if (x509cert != null) {
+            try {
+                result = new Attestation(x509cert, strictParsing);
+            } catch (CertificateParsingException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
 
     Boolean isValidChallenge(Challenge challenge) {
 

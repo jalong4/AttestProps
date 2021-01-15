@@ -161,7 +161,6 @@ public class AttestPropsUtils {
             }
 
             X509Certificate x509cert = (X509Certificate) certificate;
-            x509cert.checkValidity();
             return x509cert;
 
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException

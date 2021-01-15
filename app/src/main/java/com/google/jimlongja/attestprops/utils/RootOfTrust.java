@@ -36,6 +36,11 @@ public class RootOfTrust {
     private boolean mDeviceLocked;
 
     public RootOfTrust(ASN1Encodable asn1Encodable) throws CertificateParsingException {
+        this(asn1Encodable, true);
+    }
+
+    public RootOfTrust(ASN1Encodable asn1Encodable, boolean strictParsing)
+            throws CertificateParsingException {
         if (!(asn1Encodable instanceof ASN1Sequence)) {
             throw new CertificateParsingException("Expected sequence for root of trust, found "
                     + asn1Encodable.getClass().getName());
@@ -44,7 +49,8 @@ public class RootOfTrust {
         ASN1Sequence sequence = (ASN1Sequence) asn1Encodable;
         mVerifiedBootKey =
                 Asn1Utils.getByteArrayFromAsn1(sequence.getObjectAt(VERIFIED_BOOT_KEY_INDEX));
-        mDeviceLocked = Asn1Utils.getBooleanFromAsn1(sequence.getObjectAt(DEVICE_LOCKED_INDEX));
+        mDeviceLocked = Asn1Utils.getBooleanFromAsn1(sequence.getObjectAt(DEVICE_LOCKED_INDEX),
+                strictParsing);
         mVerifiedBootState =
                 Asn1Utils.getIntegerFromAsn1(sequence.getObjectAt(VERIFIED_BOOT_STATE_INDEX));
     }

@@ -334,9 +334,9 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
-        android:paddingBottom="6dp"
+        android:paddingBottom="12dp"
         android:text="@string/build_fingerprint"
         android:textColor="@android:color/white"
-        android:textSize="12sp" />
+        android:textSize="10sp" />
 
 </LinearLayout>

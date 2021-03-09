@@ -20,24 +20,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.jimlongja.attestprops.Models.Challenge;
 import com.google.jimlongja.attestprops.Models.Nonce;
-<<<<<<< HEAD
-import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
-import com.google.jimlongja.attestprops.Utils.Attestation;
-import com.google.jimlongja.attestprops.Utils.AuthorizationList;
-import com.google.jimlongja.attestprops.Utils.RootOfTrust;
-import com.google.jimlongja.attestprops.Utils.Utils;
 
-import java.lang.reflect.Method;
-import java.security.cert.CertificateEncodingException;
-=======
+import com.google.jimlongja.attestprops.Utils.Utils;
 import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
 import com.google.jimlongja.attestprops.utils.Attestation;
 import com.google.jimlongja.attestprops.utils.AuthorizationList;
 import com.google.jimlongja.attestprops.utils.RootOfTrust;
 
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
->>>>>>> 1f1ddbd677869fccfbcf1146435ad525a67ace54
+
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;

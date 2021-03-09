@@ -201,10 +201,10 @@ public class MainActivity extends Activity {
 
             Log.i(TAG, " ");
 
-            byte[] tbsCertificate = x509cert.getTBSCertificate();
+            byte[] encodedCertificate = x509cert.getEncoded();
 
-            Log.i(TAG, String.format("TBSCertificate: (Size [%d])", tbsCertificate.length));
-            Log.i(TAG, Utils.bytesToHex(tbsCertificate));
+            Log.i(TAG, String.format("Encoded Certificate: (Size [%d])", encodedCertificate.length));
+            Log.i(TAG, Utils.bytesToHex(encodedCertificate));
             Log.i(TAG, " ");
 
             Log.i(TAG, "Attestation Object:");

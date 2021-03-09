@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
+package com.google.jimlongja.attestprops.utils;
 
 import com.google.common.io.BaseEncoding;
 
@@ -24,30 +24,34 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import java.security.cert.CertificateParsingException;
 
 public class RootOfTrust {
-    private static final int VERIFIED_BOOT_KEY_INDEX = 0;
-    private static final int DEVICE_LOCKED_INDEX = 1;
-    private static final int VERIFIED_BOOT_STATE_INDEX = 2;
-
     public static final int KM_VERIFIED_BOOT_VERIFIED = 0;
     public static final int KM_VERIFIED_BOOT_SELF_SIGNED = 1;
     public static final int KM_VERIFIED_BOOT_UNVERIFIED = 2;
     public static final int KM_VERIFIED_BOOT_FAILED = 3;
-
-    private final byte[] verifiedBootKey;
-    private final boolean deviceLocked;
-    private final int verifiedBootState;
+    private static final int VERIFIED_BOOT_KEY_INDEX = 0;
+    private static final int DEVICE_LOCKED_INDEX = 1;
+    private static final int VERIFIED_BOOT_STATE_INDEX = 2;
+    private final byte[] mVerifiedBootKey;
+    private final int mVerifiedBootState;
+    private boolean mDeviceLocked;
 
     public RootOfTrust(ASN1Encodable asn1Encodable) throws CertificateParsingException {
+        this(asn1Encodable, true);
+    }
+
+    public RootOfTrust(ASN1Encodable asn1Encodable, boolean strictParsing)
+            throws CertificateParsingException {
         if (!(asn1Encodable instanceof ASN1Sequence)) {
             throw new CertificateParsingException("Expected sequence for root of trust, found "
                     + asn1Encodable.getClass().getName());
         }
 
         ASN1Sequence sequence = (ASN1Sequence) asn1Encodable;
-        verifiedBootKey =
+        mVerifiedBootKey =
                 Asn1Utils.getByteArrayFromAsn1(sequence.getObjectAt(VERIFIED_BOOT_KEY_INDEX));
-        deviceLocked = Asn1Utils.getBooleanFromAsn1(sequence.getObjectAt(DEVICE_LOCKED_INDEX));
-        verifiedBootState =
+        mDeviceLocked = Asn1Utils.getBooleanFromAsn1(sequence.getObjectAt(DEVICE_LOCKED_INDEX),
+                strictParsing);
+        mVerifiedBootState =
                 Asn1Utils.getIntegerFromAsn1(sequence.getObjectAt(VERIFIED_BOOT_STATE_INDEX));
     }
 
@@ -67,26 +71,26 @@ public class RootOfTrust {
     }
 
     public byte[] getVerifiedBootKey() {
-        return verifiedBootKey;
+        return mVerifiedBootKey;
     }
 
     public boolean isDeviceLocked() {
-        return deviceLocked;
+        return mDeviceLocked;
     }
 
     public int getVerifiedBootState() {
-        return verifiedBootState;
+        return mVerifiedBootState;
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
-                .append("\tVerified boot Key: ")
-                .append(BaseEncoding.base64().encode(verifiedBootKey))
-                .append("\n\tDevice locked: ")
-                .append(deviceLocked)
-                .append("\n\tVerified boot state: ")
-                .append(verifiedBootStateToString(verifiedBootState))
+                .append("\nVerified boot Key: ")
+                .append(BaseEncoding.base64().encode(mVerifiedBootKey))
+                .append("\nDevice locked: ")
+                .append(mDeviceLocked)
+                .append("\nVerified boot state: ")
+                .append(verifiedBootStateToString(mVerifiedBootState))
                 .toString();
     }
 }

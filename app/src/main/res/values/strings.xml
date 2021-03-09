@@ -3,7 +3,7 @@
     <string name="app_title">Attestation Test app</string>
     <string name="feature_supported">Attestation Features Supported</string>
     <string name="software_id_attestation_supported">Software ID Attestation Supported:</string>
-    <string name="hardware_id_attestation_supported">Hardware ID Attestation Supported:</string>
+    <string name="hardware_device_unique_attestation_supported">Hardware Device Unique Attestation Supported:</string>
     <string name="verified_boot_supported">Verified Boot Supported:</string>
     <string name="device_properties_attestation_supported">Device Properties Attestation Supported:</string>
     <string name="device_properties">Device Properties</string>
@@ -26,5 +26,7 @@
     <string name="verified_boot_state">Verified boot state:</string>
     <string name="device_locked">Device locked:</string>
     <string name="challenge_is_valid">Challenge is valid:</string>
+    <string name="is_der_compliant">DER complaint:</string>
+    <string name="cert_is_valid">Cert Validity:</string>
     <string name="build_fingerprint">ro.build.fingerprint:</string>
 </resources>

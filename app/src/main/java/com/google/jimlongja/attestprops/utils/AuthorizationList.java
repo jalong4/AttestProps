@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
+package com.google.jimlongja.attestprops.utils;
 
 import static com.google.common.base.Functions.forMap;
 import static com.google.common.collect.Collections2.transform;
+
+import android.security.keystore.KeyProperties;
+import android.util.Log;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
-import android.security.keystore.KeyProperties;
-import android.util.Log;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Primitive;
@@ -135,8 +135,8 @@ public class AuthorizationList {
     private static final int KM_TAG_BOOT_PATCHLEVEL = KM_UINT | 719;
 
     // Map for converting padding values to strings
-    private static final ImmutableMap<Integer, String> paddingMap = ImmutableMap
-            .<Integer, String> builder()
+    private static final ImmutableMap<Integer, String> sPaddingMap = ImmutableMap
+            .<Integer, String>builder()
             .put(KM_PAD_NONE, "NONE")
             .put(KM_PAD_RSA_OAEP, "OAEP")
             .put(KM_PAD_RSA_PSS, "PSS")
@@ -145,8 +145,8 @@ public class AuthorizationList {
             .build();
 
     // Map for converting digest values to strings
-    private static final ImmutableMap<Integer, String> digestMap = ImmutableMap
-            .<Integer, String> builder()
+    private static final ImmutableMap<Integer, String> sDigestMap = ImmutableMap
+            .<Integer, String>builder()
             .put(KM_DIGEST_NONE, "NONE")
             .put(KM_DIGEST_MD5, "MD5")
             .put(KM_DIGEST_SHA1, "SHA1")
@@ -157,55 +157,57 @@ public class AuthorizationList {
             .build();
 
     // Map for converting purpose values to strings
-    private static final ImmutableMap<Integer, String> purposeMap = ImmutableMap
-            .<Integer, String> builder()
+    private static final ImmutableMap<Integer, String> sPurposeMap = ImmutableMap
+            .<Integer, String>builder()
             .put(KM_PURPOSE_DECRYPT, "DECRYPT")
             .put(KM_PURPOSE_ENCRYPT, "ENCRYPT")
             .put(KM_PURPOSE_SIGN, "SIGN")
             .put(KM_PURPOSE_VERIFY, "VERIFY")
             .build();
 
-    private Set<Integer> purposes;
-    private Integer algorithm;
-    private Integer keySize;
-    private Set<Integer> digests;
-    private Set<Integer> paddingModes;
-    private Integer ecCurve;
-    private Long rsaPublicExponent;
-    private Date activeDateTime;
-    private Date originationExpireDateTime;
-    private Date usageExpireDateTime;
-    private boolean noAuthRequired;
-    private Integer userAuthType;
-    private Integer authTimeout;
-    private boolean allowWhileOnBody;
-    private boolean allApplications;
-    private byte[] applicationId;
-    private Date creationDateTime;
-    private Integer origin;
-    private boolean rollbackResistant;
-    private boolean rollbackResistance;
-    private RootOfTrust rootOfTrust;
-    private Integer osVersion;
-    private Integer osPatchLevel;
-    private Integer vendorPatchLevel;
-    private Integer bootPatchLevel;
-    private AttestationApplicationId attestationApplicationId;
-    private String brand;
-    private String device;
-    private String serialNumber;
-    private String imei;
-    private String meid;
-    private String product;
-    private String manufacturer;
-    private String model;
-    private boolean userPresenceRequired;
-    private boolean confirmationRequired;
+    private Set<Integer> mPurposes;
+    private Integer mAlgorithm;
+    private Integer mKeySize;
+    private Set<Integer> mDigests;
+    private Set<Integer> mPaddingModes;
+    private Integer mEcCurve;
+    private Long mRsaPublicExponent;
+    private Date mActiveDateTime;
+    private Date mOriginationExpireDateTime;
+    private Date mUsageExpireDateTime;
+    private boolean mNoAuthRequired;
+    private Integer mUserAuthType;
+    private Integer mAuthTimeout;
+    private boolean mAllowWhileOnBody;
+    private boolean mAllApplications;
+    private byte[] mApplicationId;
+    private Date mCreationDateTime;
+    private Integer mOrigin;
+    private boolean mRollbackResistant;
+    private boolean mRollbackResistance;
+    private RootOfTrust mRootOfTrust;
+    private Integer mOsVersion;
+    private Integer mOsPatchLevel;
+    private Integer mVendorPatchLevel;
+    private Integer mBootPatchLevel;
+    private AttestationApplicationId mAttestationApplicationId;
+    private String mBrand;
+    private String mDevice;
+    private String mSerialNumber;
+    private String mImei;
+    private String mMeid;
+    private String mProduct;
+    private String mManufacturer;
+    private String mModel;
+    private boolean mUserPresenceRequired;
+    private boolean mConfirmationRequired;
 
     public AuthorizationList(ASN1Encodable sequence) throws CertificateParsingException {
-        this(sequence, false);
+        this(sequence, true);
     }
-    public AuthorizationList(ASN1Encodable sequence, Boolean logParsedTags) throws CertificateParsingException {
+
+    public AuthorizationList(ASN1Encodable sequence, boolean strictParsing)
+            throws CertificateParsingException {
         if (!(sequence instanceof ASN1Sequence)) {
             throw new CertificateParsingException("Expected sequence for authorization list, found "
                     + sequence.getClass().getName());
@@ -216,121 +218,119 @@ public class AuthorizationList {
         for (; entry != null; entry = parseAsn1TaggedObject(parser)) {
             int tag = entry.getTagNo();
             ASN1Primitive value = entry.getObject();
-            if (logParsedTags) {
-                Log.i("Attestation", "Parsing tag: [" + tag + "], value: [" + value + "]");
-            }
+            Log.i("Attestation", "Parsing tag: [" + tag + "], value: [" + value + "]");
             switch (tag) {
                 default:
                     throw new CertificateParsingException("Unknown tag " + tag + " found");
 
                 case KM_TAG_PURPOSE & KEYMASTER_TAG_TYPE_MASK:
-                    purposes = Asn1Utils.getIntegersFromAsn1Set(value);
+                    mPurposes = Asn1Utils.getIntegersFromAsn1Set(value);
                     break;
                 case KM_TAG_ALGORITHM & KEYMASTER_TAG_TYPE_MASK:
-                    algorithm = Asn1Utils.getIntegerFromAsn1(value);
+                    mAlgorithm = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_KEY_SIZE & KEYMASTER_TAG_TYPE_MASK:
-                    keySize = Asn1Utils.getIntegerFromAsn1(value);
-                    if (logParsedTags) {
-                        Log.i("Attestation", "Found KEY SIZE, value: " + keySize);
-                    }
+                    mKeySize = Asn1Utils.getIntegerFromAsn1(value);
+                    Log.i("Attestation", "Found KEY SIZE, value: " + mKeySize);
                     break;
                 case KM_TAG_DIGEST & KEYMASTER_TAG_TYPE_MASK:
-                    digests = Asn1Utils.getIntegersFromAsn1Set(value);
+                    mDigests = Asn1Utils.getIntegersFromAsn1Set(value);
                     break;
                 case KM_TAG_PADDING & KEYMASTER_TAG_TYPE_MASK:
-                    paddingModes = Asn1Utils.getIntegersFromAsn1Set(value);
+                    mPaddingModes = Asn1Utils.getIntegersFromAsn1Set(value);
                     break;
                 case KM_TAG_RSA_PUBLIC_EXPONENT & KEYMASTER_TAG_TYPE_MASK:
-                    rsaPublicExponent = Asn1Utils.getLongFromAsn1(value);
+                    mRsaPublicExponent = Asn1Utils.getLongFromAsn1(value);
                     break;
                 case KM_TAG_NO_AUTH_REQUIRED & KEYMASTER_TAG_TYPE_MASK:
-                    noAuthRequired = true;
+                    mNoAuthRequired = true;
                     break;
                 case KM_TAG_CREATION_DATETIME & KEYMASTER_TAG_TYPE_MASK:
-                    creationDateTime = Asn1Utils.getDateFromAsn1(value);
+                    mCreationDateTime = Asn1Utils.getDateFromAsn1(value);
                     break;
                 case KM_TAG_ORIGIN & KEYMASTER_TAG_TYPE_MASK:
-                    origin = Asn1Utils.getIntegerFromAsn1(value);
+                    mOrigin = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_OS_VERSION & KEYMASTER_TAG_TYPE_MASK:
-                    osVersion = Asn1Utils.getIntegerFromAsn1(value);
+                    mOsVersion = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_OS_PATCHLEVEL & KEYMASTER_TAG_TYPE_MASK:
-                    osPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
+                    mOsPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_VENDOR_PATCHLEVEL & KEYMASTER_TAG_TYPE_MASK:
-                    vendorPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
+                    mVendorPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_BOOT_PATCHLEVEL & KEYMASTER_TAG_TYPE_MASK:
-                    bootPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
+                    mBootPatchLevel = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_ACTIVE_DATETIME & KEYMASTER_TAG_TYPE_MASK:
-                    activeDateTime = Asn1Utils.getDateFromAsn1(value);
+                    mActiveDateTime = Asn1Utils.getDateFromAsn1(value);
                     break;
                 case KM_TAG_ORIGINATION_EXPIRE_DATETIME & KEYMASTER_TAG_TYPE_MASK:
-                    originationExpireDateTime = Asn1Utils.getDateFromAsn1(value);
+                    mOriginationExpireDateTime = Asn1Utils.getDateFromAsn1(value);
                     break;
                 case KM_TAG_USAGE_EXPIRE_DATETIME & KEYMASTER_TAG_TYPE_MASK:
-                    usageExpireDateTime = Asn1Utils.getDateFromAsn1(value);
+                    mUsageExpireDateTime = Asn1Utils.getDateFromAsn1(value);
                     break;
                 case KM_TAG_ROLLBACK_RESISTANT & KEYMASTER_TAG_TYPE_MASK:
-                    rollbackResistant = true;
+                    mRollbackResistant = true;
                     break;
                 case KM_TAG_ROLLBACK_RESISTANCE & KEYMASTER_TAG_TYPE_MASK:
-                    rollbackResistance = true;
+                    mRollbackResistance = true;
                     break;
                 case KM_TAG_AUTH_TIMEOUT & KEYMASTER_TAG_TYPE_MASK:
-                    authTimeout = Asn1Utils.getIntegerFromAsn1(value);
+                    mAuthTimeout = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_ALLOW_WHILE_ON_BODY & KEYMASTER_TAG_TYPE_MASK:
-                    allowWhileOnBody = true;
+                    mAllowWhileOnBody = true;
                     break;
                 case KM_TAG_EC_CURVE & KEYMASTER_TAG_TYPE_MASK:
-                    ecCurve = Asn1Utils.getIntegerFromAsn1(value);
+                    mEcCurve = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_USER_AUTH_TYPE & KEYMASTER_TAG_TYPE_MASK:
-                    userAuthType = Asn1Utils.getIntegerFromAsn1(value);
+                    mUserAuthType = Asn1Utils.getIntegerFromAsn1(value);
                     break;
                 case KM_TAG_ROOT_OF_TRUST & KEYMASTER_TAG_TYPE_MASK:
-                    rootOfTrust = new RootOfTrust(value);
+                    Log.i("===", "getting root of trust");
+                    mRootOfTrust = new RootOfTrust(value, strictParsing);
+                    Log.i("===", "root of trust: \n" + mRootOfTrust.toString());
                     break;
                 case KM_TAG_ATTESTATION_APPLICATION_ID & KEYMASTER_TAG_TYPE_MASK:
-                    attestationApplicationId = new AttestationApplicationId(Asn1Utils
+                    mAttestationApplicationId = new AttestationApplicationId(Asn1Utils
                             .getAsn1EncodableFromBytes(Asn1Utils.getByteArrayFromAsn1(value)));
                     break;
                 case KM_TAG_ATTESTATION_ID_BRAND & KEYMASTER_TAG_TYPE_MASK:
-                    brand = getStringFromAsn1Value(value);
+                    mBrand = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_DEVICE & KEYMASTER_TAG_TYPE_MASK:
-                    device = getStringFromAsn1Value(value);
+                    mDevice = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_PRODUCT & KEYMASTER_TAG_TYPE_MASK:
-                    product = getStringFromAsn1Value(value);
+                    mProduct = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_SERIAL & KEYMASTER_TAG_TYPE_MASK:
-                    serialNumber = getStringFromAsn1Value(value);
+                    mSerialNumber = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_IMEI & KEYMASTER_TAG_TYPE_MASK:
-                    imei = getStringFromAsn1Value(value);
+                    mImei = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_MEID & KEYMASTER_TAG_TYPE_MASK:
-                    meid = getStringFromAsn1Value(value);
+                    mMeid = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_MANUFACTURER & KEYMASTER_TAG_TYPE_MASK:
-                    manufacturer = getStringFromAsn1Value(value);
+                    mManufacturer = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ATTESTATION_ID_MODEL & KEYMASTER_TAG_TYPE_MASK:
-                    model = getStringFromAsn1Value(value);
+                    mModel = getStringFromAsn1Value(value);
                     break;
                 case KM_TAG_ALL_APPLICATIONS & KEYMASTER_TAG_TYPE_MASK:
-                    allApplications = true;
+                    mAllApplications = true;
                     break;
                 case KM_TAG_TRUSTED_USER_PRESENCE_REQUIRED & KEYMASTER_TAG_TYPE_MASK:
-                    userPresenceRequired = true;
+                    mUserPresenceRequired = true;
                     break;
                 case KM_TAG_TRUSTED_CONFIRMATION_REQUIRED & KEYMASTER_TAG_TYPE_MASK:
-                    confirmationRequired = true;
+                    mConfirmationRequired = true;
                     break;
             }
         }
@@ -349,31 +349,33 @@ public class AuthorizationList {
     }
 
     public static String paddingModesToString(final Set<Integer> paddingModes) {
-        return joinStrings(transform(paddingModes, forMap(paddingMap, "Unknown")));
+        return joinStrings(transform(paddingModes, forMap(sPaddingMap, "Unknown")));
     }
 
     public static String paddingModeToString(int paddingMode) {
-        return forMap(paddingMap, "Unknown").apply(paddingMode);
+        return forMap(sPaddingMap, "Unknown").apply(paddingMode);
     }
 
     public static String digestsToString(Set<Integer> digests) {
-        return joinStrings(transform(digests, forMap(digestMap, "Unknown")));
+        return joinStrings(transform(digests, forMap(sDigestMap, "Unknown")));
     }
 
     public static String digestToString(int digest) {
-        return forMap(digestMap, "Unknown").apply(digest);
+        return forMap(sDigestMap, "Unknown").apply(digest);
     }
 
     public static String purposesToString(Set<Integer> purposes) {
-        return joinStrings(transform(purposes, forMap(purposeMap, "Unknown")));
+        return joinStrings(transform(purposes, forMap(sPurposeMap, "Unknown")));
     }
 
     public static String userAuthTypeToString(int userAuthType) {
         List<String> types = Lists.newArrayList();
-        if ((userAuthType & HW_AUTH_FINGERPRINT) != 0)
+        if ((userAuthType & HW_AUTH_FINGERPRINT) != 0) {
             types.add("Fingerprint");
-        if ((userAuthType & HW_AUTH_PASSWORD) != 0)
+        }
+        if ((userAuthType & HW_AUTH_PASSWORD) != 0) {
             types.add("Password");
+        }
         return joinStrings(types);
     }
 
@@ -422,32 +424,32 @@ public class AuthorizationList {
     }
 
     public Set<Integer> getPurposes() {
-        return purposes;
+        return mPurposes;
     }
 
     public Integer getAlgorithm() {
-        return algorithm;
+        return mAlgorithm;
     }
 
     public Integer getKeySize() {
-        return keySize;
+        return mKeySize;
     }
 
     public Set<Integer> getDigests() {
-        return digests;
+        return mDigests;
     }
 
     public Set<Integer> getPaddingModes() {
-        return paddingModes;
+        return mPaddingModes;
     }
 
     public Set<String> getPaddingModesAsStrings() throws CertificateParsingException {
-        if (paddingModes == null) {
+        if (mPaddingModes == null) {
             return ImmutableSet.of();
         }
 
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-        for (int paddingMode : paddingModes) {
+        for (int paddingMode : mPaddingModes) {
             switch (paddingMode) {
                 case KM_PAD_NONE:
                     builder.add(KeyProperties.ENCRYPTION_PADDING_NONE);
@@ -472,14 +474,15 @@ public class AuthorizationList {
     }
 
     public Integer getEcCurve() {
-        return ecCurve;
+        return mEcCurve;
     }
 
     public String ecCurveAsString() {
-        if (ecCurve == null)
+        if (mEcCurve == null) {
             return "NULL";
+        }
 
-        switch (ecCurve) {
+        switch (mEcCurve) {
             case KM_EC_CURVE_P224:
                 return "secp224r1";
             case KM_EC_CURVE_P256:
@@ -493,124 +496,136 @@ public class AuthorizationList {
         }
     }
 
-    public Long getRsaPublicExponent() {
-        return rsaPublicExponent;
+    public Long getmRsaPublicExponent() {
+        return mRsaPublicExponent;
     }
 
-    public Date getActiveDateTime() {
-        return activeDateTime;
+    public Date getmActiveDateTime() {
+        return mActiveDateTime;
     }
 
-    public Date getOriginationExpireDateTime() {
-        return originationExpireDateTime;
+    public Date getmOriginationExpireDateTime() {
+        return mOriginationExpireDateTime;
     }
 
-    public Date getUsageExpireDateTime() {
-        return usageExpireDateTime;
+    public Date getmUsageExpireDateTime() {
+        return mUsageExpireDateTime;
     }
 
     public boolean isNoAuthRequired() {
-        return noAuthRequired;
+        return mNoAuthRequired;
     }
 
     public Integer getUserAuthType() {
-        return userAuthType;
+        return mUserAuthType;
     }
 
     public Integer getAuthTimeout() {
-        return authTimeout;
+        return mAuthTimeout;
     }
 
     public boolean isAllowWhileOnBody() {
-        return allowWhileOnBody;
+        return mAllowWhileOnBody;
     }
 
     public boolean isAllApplications() {
-        return allApplications;
+        return mAllApplications;
     }
 
     public byte[] getApplicationId() {
-        return applicationId;
+        return mApplicationId;
     }
 
     public Date getCreationDateTime() {
-        return creationDateTime;
+        return mCreationDateTime;
     }
 
     public Integer getOrigin() {
-        return origin;
+        return mOrigin;
     }
 
     public boolean isRollbackResistant() {
-        return rollbackResistant;
+        return mRollbackResistant;
     }
 
     public boolean isRollbackResistance() {
-        return rollbackResistance;
+        return mRollbackResistance;
     }
 
     public RootOfTrust getRootOfTrust() {
-        return rootOfTrust;
+        return mRootOfTrust;
     }
 
     public Integer getOsVersion() {
-        return osVersion;
+        return mOsVersion;
     }
 
     public Integer getOsPatchLevel() {
-        return osPatchLevel;
+        return mOsPatchLevel;
     }
 
     public Integer getVendorPatchLevel() {
-        return vendorPatchLevel;
+        return mVendorPatchLevel;
     }
 
     public Integer getBootPatchLevel() {
-        return bootPatchLevel;
+        return mBootPatchLevel;
     }
 
     public AttestationApplicationId getAttestationApplicationId() {
-        return attestationApplicationId;
+        return mAttestationApplicationId;
     }
 
     public String getBrand() {
-        return brand;
+        return mBrand;
     }
 
     public String getDevice() {
-        return device;
+        return mDevice;
     }
 
     public String getSerialNumber() {
-        return serialNumber;
-    };
+        return mSerialNumber;
+    }
+
+    ;
 
     public String getImei() {
-        return imei;
-    };
+        return mImei;
+    }
+
+    ;
 
     public String getMeid() {
-        return meid;
-    };
+        return mMeid;
+    }
+
+    ;
 
     public String getProduct() {
-        return product;
-    };
+        return mProduct;
+    }
+
+    ;
 
     public String getManufacturer() {
-        return manufacturer;
-    };
+        return mManufacturer;
+    }
+
+    ;
 
     public String getModel() {
-        return model;
-    };
+        return mModel;
+    }
+
+    ;
 
     public boolean isUserPresenceRequired() {
-        return userPresenceRequired;
+        return mUserPresenceRequired;
     }
 
     public boolean isConfirmationRequired() {
-        return confirmationRequired;
+        return mConfirmationRequired;
     }
 
     private String getStringFromAsn1Value(ASN1Primitive value) throws CertificateParsingException {
@@ -625,125 +640,113 @@ public class AuthorizationList {
     public String toString() {
         StringBuilder s = new StringBuilder();
 
-        if (algorithm != null) {
-            s.append("\nAlgorithm: ").append(algorithmToString(algorithm));
+        if (mAlgorithm != null) {
+            s.append("\nAlgorithm: ").append(algorithmToString(mAlgorithm));
         }
 
-        if (keySize != null) {
-            s.append("\nKeySize: ").append(keySize);
+        if (mKeySize != null) {
+            s.append("\nKeySize: ").append(mKeySize);
         }
 
-        if (purposes != null && !purposes.isEmpty()) {
-            s.append("\nPurposes: ").append(purposesToString(purposes));
+        if (mPurposes != null && !mPurposes.isEmpty()) {
+            s.append("\nPurposes: ").append(purposesToString(mPurposes));
         }
 
-        if (digests != null && !digests.isEmpty()) {
-            s.append("\nDigests: ").append(digestsToString(digests));
+        if (mDigests != null && !mDigests.isEmpty()) {
+            s.append("\nDigests: ").append(digestsToString(mDigests));
         }
 
-        if (paddingModes != null && !paddingModes.isEmpty()) {
-            s.append("\nPadding modes: ").append(paddingModesToString(paddingModes));
+        if (mPaddingModes != null && !mPaddingModes.isEmpty()) {
+            s.append("\nPadding modes: ").append(paddingModesToString(mPaddingModes));
         }
 
-        if (ecCurve != null) {
+        if (mEcCurve != null) {
             s.append("\nEC Curve: ").append(ecCurveAsString());
         }
 
         String label = "\nRSA exponent: ";
-        if (rsaPublicExponent != null) {
-            s.append(label).append(rsaPublicExponent);
+        if (mRsaPublicExponent != null) {
+            s.append(label).append(mRsaPublicExponent);
         }
 
-        if (activeDateTime != null) {
-            s.append("\nActive: ").append(formatDate(activeDateTime));
+        if (mActiveDateTime != null) {
+            s.append("\nActive: ").append(formatDate(mActiveDateTime));
         }
 
-        if (originationExpireDateTime != null) {
-            s.append("\nOrigination expire: ").append(formatDate(originationExpireDateTime));
+        if (mOriginationExpireDateTime != null) {
+            s.append("\nOrigination expire: ").append(formatDate(mOriginationExpireDateTime));
         }
 
-        if (usageExpireDateTime != null) {
-            s.append("\nUsage expire: ").append(formatDate(usageExpireDateTime));
+        if (mUsageExpireDateTime != null) {
+            s.append("\nUsage expire: ").append(formatDate(mUsageExpireDateTime));
         }
 
-        if (!noAuthRequired && userAuthType != null) {
-            s.append("\nAuth types: ").append(userAuthTypeToString(userAuthType));
-            if (authTimeout != null) {
-                s.append("\nAuth timeout: ").append(authTimeout);
+        if (!mNoAuthRequired && mUserAuthType != null) {
+            s.append("\nAuth types: ").append(userAuthTypeToString(mUserAuthType));
+            if (mAuthTimeout != null) {
+                s.append("\nAuth timeout: ").append(mAuthTimeout);
             }
         }
 
-        if (applicationId != null) {
-            s.append("\nApplication ID: ").append(new String(applicationId));
+        if (mApplicationId != null) {
+            s.append("\nApplication ID: ").append(new String(mApplicationId));
         }
 
-        if (creationDateTime != null) {
-            s.append("\nCreated: ").append(formatDate(creationDateTime));
+        if (mCreationDateTime != null) {
+            s.append("\nCreated: ").append(formatDate(mCreationDateTime));
         }
 
-        if (origin != null) {
-            s.append("\nOrigin: ").append(originToString(origin));
+        if (mOrigin != null) {
+            s.append("\nOrigin: ").append(originToString(mOrigin));
         }
 
-        if (rollbackResistant) {
+        if (mRollbackResistant) {
             s.append("\nRollback resistant: true");
         }
 
-        if (rollbackResistance) {
+        if (mRollbackResistance) {
             s.append("\nRollback resistance: true");
         }
 
-        if (rootOfTrust != null) {
+        if (mRootOfTrust != null) {
             s.append("\nRoot of Trust:\n");
-            s.append(rootOfTrust);
+            s.append(mRootOfTrust);
         }
 
-        if (osVersion != null) {
-            s.append("\nOS Version: ").append(osVersion);
+        if (mOsVersion != null) {
+            s.append("\nOS Version: ").append(mOsVersion);
         }
 
-        if (osPatchLevel != null) {
-            s.append("\nOS Patchlevel: ").append(osPatchLevel);
+        if (mOsPatchLevel != null) {
+            s.append("\nOS Patchlevel: ").append(mOsPatchLevel);
         }
 
-        if (vendorPatchLevel != null) {
-            s.append("\nVendor Patchlevel: ").append(vendorPatchLevel);
+        if (mVendorPatchLevel != null) {
+            s.append("\nVendor Patchlevel: ").append(mVendorPatchLevel);
         }
 
-        if (bootPatchLevel != null) {
-            s.append("\nBoot Patchlevel: ").append(bootPatchLevel);
+        if (mBootPatchLevel != null) {
+            s.append("\nBoot Patchlevel: ").append(mBootPatchLevel);
         }
 
-        if (attestationApplicationId != null) {
-            s.append("\nAttestation Application Id:").append(attestationApplicationId);
+        if (mAttestationApplicationId != null) {
+            s.append("\nAttestation Application Id:").append(mAttestationApplicationId);
         }
 
-        if (userPresenceRequired) {
+        if (mUserPresenceRequired) {
             s.append("\nUser presence required");
         }
 
-        if (confirmationRequired) {
+        if (mConfirmationRequired) {
             s.append("\nConfirmation required");
         }
 
-        if (brand != null) {
-            s.append("\nBrand: ").append(brand);
+        if (mBrand != null) {
+            s.append("\nBrand: ").append(mBrand);
         }
-        if (device != null) {
-            s.append("\nDevice type: ").append(device);
+        if (mDevice != null) {
+            s.append("\nDevice type: ").append(mDevice);
         }
-
-        if (product != null) {
-            s.append("\nProduct: ").append(product);
-        }
-        if (manufacturer != null) {
-            s.append("\nManufacturer: ").append(manufacturer);
-        }
-
-        if (model != null) {
-            s.append("\nModel: ").append(model);
-        }
-
         return s.toString();
     }
 }

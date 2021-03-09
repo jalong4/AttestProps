@@ -12,25 +12,24 @@
  * the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
+package com.google.jimlongja.attestprops.utils;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;
 
+import java.io.UnsupportedEncodingException;
 import java.security.cert.CertificateParsingException;
 
-import java.io.UnsupportedEncodingException;
-
-public class AttestationPackageInfo implements Comparable<AttestationPackageInfo> {
+public class AttestationPackageInfo implements java.lang.Comparable<AttestationPackageInfo> {
     private static final int PACKAGE_NAME_INDEX = 0;
     private static final int VERSION_INDEX = 1;
 
-    private final String packageName;
-    private final long version;
+    private final String mPackageName;
+    private final long mVersion;
 
     public AttestationPackageInfo(String packageName, long version) {
-        this.packageName = packageName;
-        this.version = version;
+        this.mPackageName = packageName;
+        this.mVersion = version;
     }
 
     public AttestationPackageInfo(ASN1Encodable asn1Encodable) throws CertificateParsingException {
@@ -42,35 +41,35 @@ public class AttestationPackageInfo implements Comparable<AttestationPackageInfo
 
         ASN1Sequence sequence = (ASN1Sequence) asn1Encodable;
         try {
-            packageName = Asn1Utils.getStringFromAsn1OctetStreamAssumingUTF8(
+            mPackageName = Asn1Utils.getStringFromAsn1OctetStreamAssumingUTF8(
                     sequence.getObjectAt(PACKAGE_NAME_INDEX));
         } catch (UnsupportedEncodingException e) {
             throw new CertificateParsingException(
                     "Converting octet stream to String triggered an UnsupportedEncodingException",
                     e);
         }
-        version = Asn1Utils.getLongFromAsn1(sequence.getObjectAt(VERSION_INDEX));
+        mVersion = Asn1Utils.getLongFromAsn1(sequence.getObjectAt(VERSION_INDEX));
     }
 
-    public String getPackageName() {
-        return packageName;
+    public String getmPackageName() {
+        return mPackageName;
     }
 
-    public long getVersion() {
-        return version;
+    public long getmVersion() {
+        return mVersion;
     }
 
     @Override
     public String toString() {
-        return new StringBuilder().append("Package name: ").append(getPackageName())
-                .append("\nVersion: " + getVersion()).toString();
+        return new StringBuilder().append("Package name: ").append(getmPackageName())
+                .append("\nVersion: " + getmVersion()).toString();
     }
 
     @Override
     public int compareTo(AttestationPackageInfo other) {
-        int res = packageName.compareTo(other.packageName);
+        int res = mPackageName.compareTo(other.mPackageName);
         if (res != 0) return res;
-        res = Long.compare(version, other.version);
+        res = Long.compare(mVersion, other.mVersion);
         if (res != 0) return res;
         return res;
     }

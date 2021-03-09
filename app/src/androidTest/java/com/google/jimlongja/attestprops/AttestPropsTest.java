@@ -1,14 +1,26 @@
 package com.google.jimlongja.attestprops;
 
+import static android.os.Build.BRAND;
+import static android.os.Build.DEVICE;
+import static android.os.Build.MANUFACTURER;
+import static android.os.Build.MODEL;
+import static android.os.Build.PRODUCT;
+
+import static org.junit.Assume.assumeTrue;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
-import com.google.jimlongja.attestprops.Utils.Attestation;
-import com.google.jimlongja.attestprops.Utils.AuthorizationList;
-import com.google.jimlongja.attestprops.Utils.RootOfTrust;
+import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
+import com.google.jimlongja.attestprops.utils.Attestation;
+import com.google.jimlongja.attestprops.utils.AuthorizationList;
+import com.google.jimlongja.attestprops.utils.RootOfTrust;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -21,27 +33,16 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import static android.os.Build.BRAND;
-import static android.os.Build.DEVICE;
-import static android.os.Build.MANUFACTURER;
-import static android.os.Build.MODEL;
-import static android.os.Build.PRODUCT;
-import static org.junit.Assume.assumeTrue;
-
 @RunWith(AndroidJUnit4.class)
 public class AttestPropsTest {
 
+    private static final String CHALLENGE = "test challenge";
+    private static final String TAG = AttestPropsTest.class.getSimpleName();
     private static Context sAppContext;
     private static AttestPropsUtils sAttestPropsUtils;
     private static X509Certificate sX509Certificate;
     private static boolean sIsDevicePropertyAttestationSupported = false;
     private static boolean sDevicePropertyAttestationFailed = false;
-
-    private static final String CHALLENGE = "test challenge";
-
 
     @BeforeClass
     public static void setUp() {
@@ -50,23 +51,27 @@ public class AttestPropsTest {
         sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE);
         sIsDevicePropertyAttestationSupported =
                 sAttestPropsUtils.isDevicePropertyAttestationSupported();
+        sDevicePropertyAttestationFailed =
+                sAttestPropsUtils.didDevicePropertyAttestationFail();
         sDevicePropertyAttestationFailed = sAttestPropsUtils.didDevicePropertyAttestationFail();
         if (sIsDevicePropertyAttestationSupported && sDevicePropertyAttestationFailed) {
             sX509Certificate = sAttestPropsUtils.getAttestationCertificate(sAppContext, CHALLENGE,
                     false);
         }
     }
+
     @Test
     public void softwareIDAttestationIsSupported() {
         Assert.assertTrue(sAppContext.getPackageManager()
-                        .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
+                .hasSystemFeature(AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION));
     }
 
     @Test
-    public void hardwareIDAttestationIsSupported() {
+    public void hardwareDeviceUniqueAttestationIsSupported() {
         Assert.assertTrue(sAppContext.getPackageManager()
                 .hasSystemFeature(AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION));
     }
+
 
     @Test
     public void verifiedBootIsSupported() {
@@ -80,8 +85,9 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestationReturnsTeeEnforcedX509Certification() {
+    public void testTeeEnforcedAttestation() {
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
+        Log.d(TAG, teeEnforced.toString());
         Assert.assertTrue(teeEnforced != null);
     }
 
@@ -101,39 +107,40 @@ public class AttestPropsTest {
     }
 
     @Test
-    public void attestedBrandPropertyMatches() {
+    public void attestedBrandProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
 
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getBrand() == BRAND);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getBrand().equals(BRAND));
     }
 
     @Test
-    public void attestedDevicePropertyMatches() {
+    public void attestedDeviceProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice() == DEVICE);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getDevice().equals(DEVICE));
     }
 
     @Test
-    public void attestedProductPropertyMatches() {
+    public void attestedProductProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct() == PRODUCT);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getProduct().equals(PRODUCT));
     }
 
     @Test
-    public void attestedManufacturerPropertyMatches() {
+    public void attestedManufacturerProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getManufacturer() == MANUFACTURER);
+        Assert.assertTrue(teeEnforced != null
+                && teeEnforced.getManufacturer().equals(MANUFACTURER));
     }
 
     @Test
-    public void attestedModelPropertyMatches() {
+    public void attestedModelProperty() {
         assumeTrue("Skipping ...", shouldRunNewTests());
         AuthorizationList teeEnforced = getTeeEnforcedAuthorizationList();
-        Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() == MODEL);
+        Assert.assertTrue(teeEnforced != null && teeEnforced.getModel() .equals(MODEL));
     }
 
     @Test
@@ -160,14 +167,10 @@ public class AttestPropsTest {
         return teeEnforced.getRootOfTrust();
     }
 
+
     private AuthorizationList getTeeEnforcedAuthorizationList() {
         Attestation attestation = getAttestation();
         return (attestation == null) ? null : attestation.getTeeEnforced();
-    }
-
-    private static class AttestPropsAsyncTaskReturnParams {
-        X509Certificate x509Certificate;
-        Boolean isDevicePropertyAttestationSupported;
     }
 
     private Attestation getAttestation() {
@@ -211,7 +214,8 @@ public class AttestPropsTest {
     }
 
     private boolean shouldRunNewTests() {
-        return sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
+        boolean result = sIsDevicePropertyAttestationSupported && !sDevicePropertyAttestationFailed;
+        return result;
     }
 
 }

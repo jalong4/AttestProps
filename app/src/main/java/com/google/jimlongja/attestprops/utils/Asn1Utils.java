@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
+package com.google.jimlongja.attestprops.utils;
+
+import android.util.Log;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -31,7 +33,6 @@ import org.bouncycastle.asn1.DEROctetString;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.String;
 import java.math.BigInteger;
 import java.security.cert.CertificateParsingException;
 import java.util.Date;
@@ -114,7 +115,7 @@ public class Asn1Utils {
         }
 
         ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-        for (Enumeration<?> e = ((ASN1Set) set).getObjects(); e.hasMoreElements();) {
+        for (Enumeration<?> e = ((ASN1Set) set).getObjects(); e.hasMoreElements(); ) {
             builder.add(getIntegerFromAsn1((ASN1Integer) e.nextElement()));
         }
         return builder.build();
@@ -131,29 +132,28 @@ public class Asn1Utils {
         return new String(octetString.getOctets(), "UTF-8");
     }
 
-    public static String getStringFromAsn1Value(ASN1Primitive value) throws CertificateParsingException {
-        try {
-            return getStringFromAsn1OctetStreamAssumingUTF8(value);
-        } catch (UnsupportedEncodingException e) {
-            throw new CertificateParsingException("Error parsing ASN.1 value", e);
-        }
-    }
-
     public static Date getDateFromAsn1(ASN1Primitive value) throws CertificateParsingException {
         return new Date(getLongFromAsn1(value));
     }
-
     public static boolean getBooleanFromAsn1(ASN1Encodable value)
+            throws CertificateParsingException {
+        return getBooleanFromAsn1(value, true);
+    }
+
+    public static boolean getBooleanFromAsn1(ASN1Encodable value, boolean strictParsing)
             throws CertificateParsingException {
         if (!(value instanceof ASN1Boolean)) {
             throw new CertificateParsingException(
                     "Expected boolean, found " + value.getClass().getName());
         }
         ASN1Boolean booleanValue = (ASN1Boolean) value;
+        Log.i("===", "booleanValue: " + booleanValue.toString());
         if (booleanValue.equals(ASN1Boolean.TRUE)) {
             return true;
         } else if (booleanValue.equals((ASN1Boolean.FALSE))) {
             return false;
+        } else if (!strictParsing){
+            return true;
         }
 
         throw new CertificateParsingException(

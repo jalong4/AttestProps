@@ -12,29 +12,30 @@
  * the License.
  */
 
-package com.google.jimlongja.attestprops.Utils;
+package com.google.jimlongja.attestprops.utils;
 
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1Set;
-
-import java.security.cert.CertificateParsingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 
-public class AttestationApplicationId implements Comparable<AttestationApplicationId> {
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateParsingException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AttestationApplicationId implements java.lang.Comparable<AttestationApplicationId> {
     private static final int PACKAGE_INFOS_INDEX = 0;
     private static final int SIGNATURE_DIGESTS_INDEX = 1;
 
-    private final List<AttestationPackageInfo> packageInfos;
-    private final List<byte[]> signatureDigests;
+    private final List<AttestationPackageInfo> mPackageInfos;
+    private final List<byte[]> mSignatureDigests;
 
     public AttestationApplicationId(Context context)
             throws NoSuchAlgorithmException, NameNotFoundException {
@@ -44,25 +45,25 @@ public class AttestationApplicationId implements Comparable<AttestationApplicati
         if (packageNames == null || packageNames.length == 0) {
             throw new NameNotFoundException("No names found for uid");
         }
-        packageInfos = new ArrayList<AttestationPackageInfo>();
+        mPackageInfos = new ArrayList<AttestationPackageInfo>();
         for (String packageName : packageNames) {
             // get the package info for the given package name including
             // the signatures
             PackageInfo packageInfo = pm.getPackageInfo(packageName, 0);
-            packageInfos.add(new AttestationPackageInfo(packageName, packageInfo.versionCode));
+            mPackageInfos.add(new AttestationPackageInfo(packageName, packageInfo.versionCode));
         }
         // The infos must be sorted, the implementation of Comparable relies on it.
-        packageInfos.sort(null);
+        mPackageInfos.sort(null);
 
         // compute the sha256 digests of the signature blobs
-        signatureDigests = new ArrayList<byte[]>();
+        mSignatureDigests = new ArrayList<byte[]>();
         PackageInfo packageInfo = pm.getPackageInfo(packageNames[0], PackageManager.GET_SIGNATURES);
         for (Signature signature : packageInfo.signatures) {
             MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-            signatureDigests.add(sha256.digest(signature.toByteArray()));
+            mSignatureDigests.add(sha256.digest(signature.toByteArray()));
         }
         // The digests must be sorted. the implementation of Comparable relies on it
-        signatureDigests.sort(new ByteArrayComparator());
+        mSignatureDigests.sort(new ByteArrayComparator());
     }
 
     public AttestationApplicationId(ASN1Encodable asn1Encodable)
@@ -74,35 +75,35 @@ public class AttestationApplicationId implements Comparable<AttestationApplicati
         }
 
         ASN1Sequence sequence = (ASN1Sequence) asn1Encodable;
-        packageInfos = parseAttestationPackageInfos(sequence.getObjectAt(PACKAGE_INFOS_INDEX));
+        mPackageInfos = parseAttestationPackageInfos(sequence.getObjectAt(PACKAGE_INFOS_INDEX));
         // The infos must be sorted, the implementation of Comparable relies on it.
-        packageInfos.sort(null);
-        signatureDigests = parseSignatures(sequence.getObjectAt(SIGNATURE_DIGESTS_INDEX));
+        mPackageInfos.sort(null);
+        mSignatureDigests = parseSignatures(sequence.getObjectAt(SIGNATURE_DIGESTS_INDEX));
         // The digests must be sorted. the implementation of Comparable relies on it
-        signatureDigests.sort(new ByteArrayComparator());
+        mSignatureDigests.sort(new ByteArrayComparator());
     }
 
     public List<AttestationPackageInfo> getAttestationPackageInfos() {
-        return packageInfos;
+        return mPackageInfos;
     }
 
-    public List<byte[]> getSignatureDigests() {
-        return signatureDigests;
+    public List<byte[]> getmSignatureDigests() {
+        return mSignatureDigests;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("AttestationApplicationId:");
-        int noOfInfos = packageInfos.size();
+        int noOfInfos = mPackageInfos.size();
         int i = 1;
-        for (AttestationPackageInfo info : packageInfos) {
+        for (AttestationPackageInfo info : mPackageInfos) {
             sb.append("\n### Package info " + i + "/" + noOfInfos + " ###\n");
             sb.append(info);
         }
         i = 1;
-        int noOfSigs = signatureDigests.size();
-        for (byte[] sig : signatureDigests) {
+        int noOfSigs = mSignatureDigests.size();
+        for (byte[] sig : mSignatureDigests) {
             sb.append("\nSignature digest " + i++ + "/" + noOfSigs + ":");
             for (byte b : sig) {
                 sb.append(String.format(" %02X", b));
@@ -113,17 +114,17 @@ public class AttestationApplicationId implements Comparable<AttestationApplicati
 
     @Override
     public int compareTo(AttestationApplicationId other) {
-        int res = Integer.compare(packageInfos.size(), other.packageInfos.size());
+        int res = Integer.compare(mPackageInfos.size(), other.mPackageInfos.size());
         if (res != 0) return res;
-        for (int i = 0; i < packageInfos.size(); ++i) {
-            res = packageInfos.get(i).compareTo(other.packageInfos.get(i));
+        for (int i = 0; i < mPackageInfos.size(); ++i) {
+            res = mPackageInfos.get(i).compareTo(other.mPackageInfos.get(i));
             if (res != 0) return res;
         }
-        res = Integer.compare(signatureDigests.size(), other.signatureDigests.size());
+        res = Integer.compare(mSignatureDigests.size(), other.mSignatureDigests.size());
         if (res != 0) return res;
         ByteArrayComparator cmp = new ByteArrayComparator();
-        for (int i = 0; i < signatureDigests.size(); ++i) {
-            res = cmp.compare(signatureDigests.get(i), other.signatureDigests.get(i));
+        for (int i = 0; i < mSignatureDigests.size(); ++i) {
+            res = cmp.compare(mSignatureDigests.get(i), other.mSignatureDigests.get(i));
             if (res != 0) return res;
         }
         return res;

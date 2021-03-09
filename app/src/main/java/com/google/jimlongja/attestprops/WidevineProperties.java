@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public class WidevineProperties {
     private static final UUID WIDEVINE_UUID = new UUID(0xEDEF8BA979D64ACEL, 0xA3C827DCD51D21EDL);
-    private MediaDrm mMediaDrm = null;
-
-    private String mSystemID;
-    private String mSPOID;
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    private final MediaDrm mMediaDrm = null;
+    private final String mSystemID;
+    private final String mSPOID;
 
     public WidevineProperties() {
         mSystemID = getWidevineSystemId();

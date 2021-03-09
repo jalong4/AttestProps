@@ -212,11 +212,11 @@ public class MainActivity extends Activity {
 
             AuthorizationList teeEnforced = attestation.getTeeEnforced();
 
-            logAndUpdateTextView(mTvAttestedBrandProperty, R.string.attested_brand_property, teeEnforced.getBrand());
-            logAndUpdateTextView(mTvAttestedDeviceProperty, R.string.attested_device_property, teeEnforced.getDevice());
-            logAndUpdateTextView(mTvAttestedProductProperty, R.string.attested_product_property, teeEnforced.getProduct());
-            logAndUpdateTextView(mTvAttestedManufacturerProperty, R.string.attested_manufacturer_property, teeEnforced.getManufacturer());
-            logAndUpdateTextView(mTvAttestedModelProperty, R.string.attested_model_property, teeEnforced.getModel());
+            logAndUpdateTextView(mTvAttestedBrandProperty, R.string.attested_brand_property, isDevicePropertyAttestationSupported ? teeEnforced.getBrand() : "N/A");
+            logAndUpdateTextView(mTvAttestedDeviceProperty, R.string.attested_device_property, isDevicePropertyAttestationSupported ? teeEnforced.getDevice()  : "N/A");
+            logAndUpdateTextView(mTvAttestedProductProperty, R.string.attested_product_property, isDevicePropertyAttestationSupported ? teeEnforced.getProduct()  : "N/A");
+            logAndUpdateTextView(mTvAttestedManufacturerProperty, R.string.attested_manufacturer_property, isDevicePropertyAttestationSupported ? teeEnforced.getManufacturer()  : "N/A");
+            logAndUpdateTextView(mTvAttestedModelProperty, R.string.attested_model_property, isDevicePropertyAttestationSupported ? teeEnforced.getModel()  : "N/A");
 
             if (teeEnforced.getRootOfTrust() != null) {
                 Log.i(TAG, "Root of Trust: ");

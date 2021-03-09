@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion "android-S"
     buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "com.google.jimlongja.attestprops"
         minSdkVersion 28
-        targetSdkVersion 30
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 

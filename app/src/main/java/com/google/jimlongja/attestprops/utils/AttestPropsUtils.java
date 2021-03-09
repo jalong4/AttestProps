@@ -1,6 +1,7 @@
 package com.google.jimlongja.attestprops.utils;
 
 import android.content.Context;
+import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
@@ -10,6 +11,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.junit.Assert;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
@@ -79,6 +81,8 @@ public class AttestPropsUtils {
     private KeyGenParameterSpec buildKeyGenParameterSpec(String challenge,
                                                          boolean attestDeviceProperties) {
 
+        mIsDevicePropertyAttestationSupported = Build.VERSION.SDK_INT > Build.VERSION_CODES.R;
+
         Date KeyValidityStart = new Date();
         Date KeyValidyForOriginationEnd =
                 new Date(KeyValidityStart.getTime() + ORIGINATION_TIME_OFFSET);
@@ -94,37 +98,18 @@ public class AttestPropsUtils {
 
                 .setUserAuthenticationRequired(false)
                 .setAttestationChallenge(challenge.getBytes())
-
-//                uncomment this line when SDK for S is available
-//                .setDevicePropertiesAttestationIncluded(true)
-
                 .setKeyValidityStart(KeyValidityStart)
                 .setKeyValidityForOriginationEnd(KeyValidyForOriginationEnd)
                 .setKeyValidityForConsumptionEnd(KeyValidyForComsumptionnEnd);
 
-        // Use reflection until new API signitures get update in the Android SDK
-        // Print exception and continue if method is not present
-        // setDevicePropertiesAttestationIncluded to true if it is supported
-
-        // Sometimes device perperty attestation can be supported but not configured, in this case
-        // the ProviderException is thrown and we will not get a cert back.
-        // In these cased, we can request to not attest device properties so we get the cert which
-        // has all other other attributes
-        // So if attestDeviceProperties is set to false, it means don't
-        // setDevicePropertiesAttestationIncluded to true even if it's supported
-
-        if (attestDeviceProperties) {
-            try {
-                ReflectionUtil.invoke(builder, "setDevicePropertiesAttestationIncluded",
-                        new Class<?>[]{boolean.class}, true);
-                mIsDevicePropertyAttestationSupported = true;
-            } catch (ReflectionUtil.ReflectionIsTemporaryException e) {
-                mIsDevicePropertyAttestationSupported = false;
-            }
-
-            Log.i(TAG, String.format("setDevicePropertiesAttestationIncluded:  %b",
-                    mIsDevicePropertyAttestationSupported ? "true" : "Not supported"));
+        if (mIsDevicePropertyAttestationSupported) {
+            builder.setDevicePropertiesAttestationIncluded(true);
         }
+
+
+        Log.i(TAG, String.format("setDevicePropertiesAttestationIncluded:  %b",
+                mIsDevicePropertyAttestationSupported ? "true" : "Not supported"));
+
         return builder.build();
 
 

@@ -15,8 +15,10 @@ import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
 import com.google.jimlongja.attestprops.Utils.Attestation;
 import com.google.jimlongja.attestprops.Utils.AuthorizationList;
 import com.google.jimlongja.attestprops.Utils.RootOfTrust;
+import com.google.jimlongja.attestprops.Utils.Utils;
 
 import java.lang.reflect.Method;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -174,9 +176,21 @@ public class MainActivity extends Activity {
                 isDevicePropertyAttestationSupported.toString());
 
         try {
-            Attestation attestation = new Attestation(x509cert);
 
             Log.i(TAG, " ");
+
+            byte[] tbsCertificate = x509cert.getTBSCertificate();
+
+            Log.i(TAG, "TBSCertificate:");
+            Log.i(TAG, Utils.bytesToHex(tbsCertificate));
+            Log.i(TAG, " ");
+
+            Attestation attestation = new Attestation(x509cert);
+
+            Log.i(TAG, "Attestation Object:");
+            Log.i(TAG, attestation.toString());
+
+
 
             AuthorizationList teeEnforced = attestation.getTeeEnforced();
 
@@ -210,7 +224,7 @@ public class MainActivity extends Activity {
             Log.i(TAG, String.format("Challenge Length: %d", attestation.getAttestationChallenge().length));
             logAndUpdateTextView(mTvChallengeIsValid, R.string.challenge_is_valid, isValidChallenge(challenge).toString());
 
-        } catch (CertificateParsingException e) {
+        } catch (CertificateParsingException | CertificateEncodingException e) {
             e.printStackTrace();
         }
     }

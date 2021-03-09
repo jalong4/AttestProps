@@ -2,6 +2,8 @@ package com.google.jimlongja.attestprops;
 
 import android.media.MediaDrm;
 
+import com.google.jimlongja.attestprops.Utils.Utils;
+
 import java.util.UUID;
 
 public class WidevineProperties {
@@ -54,17 +56,6 @@ public class WidevineProperties {
     }
 
     private String getWidevineSPOID() {
-        return bytesToHex(getDrmInfo().getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID));
-    }
-
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
+        return Utils.bytesToHex(getDrmInfo().getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID));
     }
 }

@@ -203,7 +203,7 @@ public class MainActivity extends Activity {
 
             byte[] tbsCertificate = x509cert.getTBSCertificate();
 
-            Log.i(TAG, "TBSCertificate:");
+            Log.i(TAG, String.format("TBSCertificate: (Size [%d])", tbsCertificate.length));
             Log.i(TAG, Utils.bytesToHex(tbsCertificate));
             Log.i(TAG, " ");
 

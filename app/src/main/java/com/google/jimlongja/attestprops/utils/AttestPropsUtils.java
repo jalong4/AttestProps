@@ -5,8 +5,13 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.junit.Assert;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -16,6 +21,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.ProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -23,6 +30,10 @@ import java.security.spec.ECGenParameterSpec;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class AttestPropsUtils {
@@ -172,5 +183,48 @@ public class AttestPropsUtils {
         }
 
         return null;
+    }
+
+    public static void verifyCertificateChain(Certificate[] certChain)
+            throws GeneralSecurityException {
+        assertNotNull(certChain);
+        for (int i = 1; i < certChain.length; ++i) {
+            try {
+                PublicKey pubKey = certChain[i].getPublicKey();
+                certChain[i - 1].verify(pubKey);
+                if (i == certChain.length - 1) {
+                    // Last cert should be self-signed.
+                    certChain[i].verify(pubKey);
+                }
+
+                // Check that issuer in the signed cert matches subject in the signing cert.
+                X509Certificate x509CurrCert = (X509Certificate) certChain[i];
+                X509Certificate x509PrevCert = (X509Certificate) certChain[i - 1];
+                X500Name signingCertSubject =
+                        new JcaX509CertificateHolder(x509CurrCert).getSubject();
+                X500Name signedCertIssuer =
+                        new JcaX509CertificateHolder(x509PrevCert).getIssuer();
+                // Use .toASN1Object().equals() rather than .equals() because .equals() is case
+                // insensitive, and we want to verify an exact match.
+                assertTrue(
+                        signedCertIssuer.toASN1Object().equals(signingCertSubject.toASN1Object()));
+
+                X500Name signedCertSubject =
+                        new JcaX509CertificateHolder(x509PrevCert).getSubject();
+                if (i == 1) {
+                    // First cert should have subject "CN=Android Keystore Key".
+                    assertEquals(signedCertSubject, new X500Name("CN=Android Keystore Key"));
+                } else {
+                    // Only strongbox implementations should have strongbox in the subject line
+                    assertEquals(false, signedCertSubject.toString()
+                            .toLowerCase()
+                            .contains("strongbox"));
+                }
+            } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException
+                    | NoSuchProviderException | SignatureException e) {
+                throw new GeneralSecurityException("Failed to verify certificate "
+                        + certChain[i - 1] + " with public key " + certChain[i].getPublicKey(), e);
+            }
+        }
     }
 }

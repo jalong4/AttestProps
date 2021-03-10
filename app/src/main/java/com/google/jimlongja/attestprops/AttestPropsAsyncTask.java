@@ -12,17 +12,16 @@ import java.util.List;
 
 
 public class AttestPropsAsyncTask extends AsyncTask<AttestPropsAsyncTaskParams, Integer,
-        Pair<X509Certificate, List<Certificate>>> {
+        List<Certificate>> {
 
     private static final int ID_TYPE_BASE_INFO = 1;
     private static final String TAG = "AttestPropsAsyncTask";
     private AttestPropsAsyncTaskInterface mCallback;
     private final AttestPropsUtils mAttestPropsUtils = new AttestPropsUtils();
     private Boolean mIsDevicePropertyAttestationSupported;
-    private List<Certificate> mCertChain = null;
 
     @Override
-    protected Pair<X509Certificate, List<Certificate>> doInBackground(AttestPropsAsyncTaskParams... params) {
+    protected List<Certificate> doInBackground(AttestPropsAsyncTaskParams... params) {
         if (params.length != 1) {
             return null;
         }
@@ -30,23 +29,22 @@ public class AttestPropsAsyncTask extends AsyncTask<AttestPropsAsyncTaskParams, 
         boolean devicePropertyAttestationFailed = false;
 
         mCallback = params[0].getCallback();
-        Pair<X509Certificate, List<Certificate>> pair = mAttestPropsUtils.getAttestationCertificateAndChain(
+        List<Certificate> certificateChain = mAttestPropsUtils.getAttestationCertificateChain(
                 params[0].getContext(), params[0].getChallenge(), true);
         mIsDevicePropertyAttestationSupported =
                 mAttestPropsUtils.isDevicePropertyAttestationSupported();
-        mCertChain = pair == null ? null : pair.second;
 
         if (mAttestPropsUtils.didDevicePropertyAttestationFail()) {
             Log.i(TAG, "Calling Attestation without attesting props");
-            pair = mAttestPropsUtils.getAttestationCertificateAndChain(
+            certificateChain = mAttestPropsUtils.getAttestationCertificateChain(
                     params[0].getContext(), params[0].getChallenge(), false);
         }
-        return pair;
+        return certificateChain;
 
     }
 
-    protected void onPostExecute(Pair<X509Certificate, List<Certificate>> pair) {
-        mCallback.onComplete(pair, mIsDevicePropertyAttestationSupported);
+    protected void onPostExecute(List<Certificate> certificateChain) {
+        mCallback.onComplete(certificateChain, mIsDevicePropertyAttestationSupported);
     }
 
 }

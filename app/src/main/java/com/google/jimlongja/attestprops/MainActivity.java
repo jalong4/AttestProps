@@ -172,11 +172,10 @@ public class MainActivity extends Activity {
                 new AttestPropsUtils().getSystemProperty(BUILD_FINGERPRINT));
     }
 
-    private void updateUIandLogOutput(Pair<X509Certificate, List<Certificate>> pair,
+    private void updateUIandLogOutput(List<Certificate> certChain,
                                       Boolean isDevicePropertyAttestationSupported) {
 
-        X509Certificate x509cert = pair == null ? null : pair.first;
-        List<Certificate> certChain = pair == null ? null : pair.second;
+        X509Certificate x509cert = (X509Certificate) certChain.get(0);
 
         if (x509cert == null) {
             Log.e(TAG, "Failed to get x509 cert");

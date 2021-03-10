@@ -1,6 +1,7 @@
 package com.google.jimlongja.attestprops.Utils;
 
 import android.content.Context;
+import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
@@ -82,7 +83,6 @@ public class AttestPropsUtils {
     private KeyGenParameterSpec buildKeyGenParameterSpec(@NotNull String challenge,
                                                          boolean attestDeviceProperties) {
 
-//        mIsDevicePropertyAttestationSupported = Build.VERSION.SDK_INT > Build.VERSION_CODES.R;
         mIsDevicePropertyAttestationSupported = "S".equals(getSystemProperty(BUILD_VERSION));
         Date KeyValidityStart = new Date();
         Date KeyValidyForOriginationEnd =
@@ -128,12 +128,12 @@ public class AttestPropsUtils {
         return Arrays.asList(keyStore.getCertificateChain(KEYSTORE_ALIAS));
     }
 
-    public Pair<X509Certificate, List<Certificate>> getAttestationCertificateAndChain(
+    public List<Certificate> getAttestationCertificateChain(
             Context context, String challenge) {
-        return getAttestationCertificateAndChain(context, challenge, true);
+        return getAttestationCertificateChain(context, challenge, true);
     }
 
-    public Pair<X509Certificate, List<Certificate>> getAttestationCertificateAndChain(
+    public List<Certificate> getAttestationCertificateChain(
             Context context, String challenge, boolean attestDeviceProperties) {
 
         try {
@@ -156,12 +156,11 @@ public class AttestPropsUtils {
                 return null;
             }
 
-            X509Certificate x509cert = (X509Certificate) certificate;
-            return new Pair(x509cert, certificates);
+            verifyCertificateChain(certificates.toArray(new Certificate[0]));
 
-        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException
-                | IOException | NoSuchProviderException | CertificateException
-                | InvalidKeyException e) {
+            return certificates;
+
+        } catch (IOException | GeneralSecurityException e) {
             e.printStackTrace();
         } catch (ProviderException e) {
             mDevicePropertyAttestationFailed = true;
@@ -170,7 +169,7 @@ public class AttestPropsUtils {
         return null;
     }
 
-    public static void verifyCertificateChain(Certificate[] certChain)
+    public void verifyCertificateChain(Certificate[] certChain)
             throws GeneralSecurityException {
         assertNotNull(certChain);
         for (int i = 1; i < certChain.length; ++i) {

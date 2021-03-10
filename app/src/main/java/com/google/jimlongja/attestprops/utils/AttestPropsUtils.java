@@ -39,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class AttestPropsUtils {
+    private static final String BUILD_VERSION = "ro.build.version.codename";
     public static final String HARDWARE_DEVICE_UNIQUE_ATTESTATION =
             "android.hardware.device_unique_attestation";
     public static final String SOFTWARE_DEVICE_ID_ATTESTATION =
@@ -81,8 +82,8 @@ public class AttestPropsUtils {
     private KeyGenParameterSpec buildKeyGenParameterSpec(String challenge,
                                                          boolean attestDeviceProperties) {
 
-        mIsDevicePropertyAttestationSupported = Build.VERSION.SDK_INT > Build.VERSION_CODES.R;
-
+//        mIsDevicePropertyAttestationSupported = Build.VERSION.SDK_INT > Build.VERSION_CODES.R;
+        mIsDevicePropertyAttestationSupported = "S".equals(getSystemProperty(BUILD_VERSION));
         Date KeyValidityStart = new Date();
         Date KeyValidyForOriginationEnd =
                 new Date(KeyValidityStart.getTime() + ORIGINATION_TIME_OFFSET);

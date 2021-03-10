@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.jimlongja.attestprops.utils;
+package com.google.jimlongja.attestprops.Utils;
 
 import android.util.Log;
 

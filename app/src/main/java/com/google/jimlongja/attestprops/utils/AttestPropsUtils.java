@@ -1,17 +1,17 @@
-package com.google.jimlongja.attestprops.utils;
+package com.google.jimlongja.attestprops.Utils;
 
 import android.content.Context;
-import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Log;
+import android.util.Pair;
+
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.junit.Assert;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
@@ -79,7 +79,7 @@ public class AttestPropsUtils {
         }
     }
 
-    private KeyGenParameterSpec buildKeyGenParameterSpec(String challenge,
+    private KeyGenParameterSpec buildKeyGenParameterSpec(@NotNull String challenge,
                                                          boolean attestDeviceProperties) {
 
 //        mIsDevicePropertyAttestationSupported = Build.VERSION.SDK_INT > Build.VERSION_CODES.R;
@@ -112,8 +112,6 @@ public class AttestPropsUtils {
                 mIsDevicePropertyAttestationSupported ? "true" : "Not supported"));
 
         return builder.build();
-
-
     }
 
     private List<Certificate> getCertificateChainFromKeyStore(
@@ -130,12 +128,13 @@ public class AttestPropsUtils {
         return Arrays.asList(keyStore.getCertificateChain(KEYSTORE_ALIAS));
     }
 
-    public X509Certificate getAttestationCertificate(Context context, String challenge) {
-        return getAttestationCertificate(context, challenge, true);
+    public Pair<X509Certificate, List<Certificate>> getAttestationCertificateAndChain(
+            Context context, String challenge) {
+        return getAttestationCertificateAndChain(context, challenge, true);
     }
 
-    public X509Certificate getAttestationCertificate(Context context, String challenge,
-                                                     boolean attestDeviceProperties) {
+    public Pair<X509Certificate, List<Certificate>> getAttestationCertificateAndChain(
+            Context context, String challenge, boolean attestDeviceProperties) {
 
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -158,7 +157,7 @@ public class AttestPropsUtils {
             }
 
             X509Certificate x509cert = (X509Certificate) certificate;
-            return x509cert;
+            return new Pair(x509cert, certificates);
 
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | KeyStoreException
                 | IOException | NoSuchProviderException | CertificateException

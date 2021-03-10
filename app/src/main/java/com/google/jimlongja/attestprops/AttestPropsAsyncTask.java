@@ -2,23 +2,27 @@ package com.google.jimlongja.attestprops;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import android.util.Pair;
 
-import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
+import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
 
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 
 public class AttestPropsAsyncTask extends AsyncTask<AttestPropsAsyncTaskParams, Integer,
-        X509Certificate> {
+        Pair<X509Certificate, List<Certificate>>> {
 
     private static final int ID_TYPE_BASE_INFO = 1;
     private static final String TAG = "AttestPropsAsyncTask";
     private AttestPropsAsyncTaskInterface mCallback;
     private final AttestPropsUtils mAttestPropsUtils = new AttestPropsUtils();
     private Boolean mIsDevicePropertyAttestationSupported;
+    private List<Certificate> mCertChain = null;
 
     @Override
-    protected X509Certificate doInBackground(AttestPropsAsyncTaskParams... params) {
+    protected Pair<X509Certificate, List<Certificate>> doInBackground(AttestPropsAsyncTaskParams... params) {
         if (params.length != 1) {
             return null;
         }
@@ -26,22 +30,23 @@ public class AttestPropsAsyncTask extends AsyncTask<AttestPropsAsyncTaskParams, 
         boolean devicePropertyAttestationFailed = false;
 
         mCallback = params[0].getCallback();
-        X509Certificate cert = mAttestPropsUtils.getAttestationCertificate(params[0].getContext(),
-                params[0].getChallenge(), true);
+        Pair<X509Certificate, List<Certificate>> pair = mAttestPropsUtils.getAttestationCertificateAndChain(
+                params[0].getContext(), params[0].getChallenge(), true);
         mIsDevicePropertyAttestationSupported =
                 mAttestPropsUtils.isDevicePropertyAttestationSupported();
+        mCertChain = pair == null ? null : pair.second;
 
         if (mAttestPropsUtils.didDevicePropertyAttestationFail()) {
             Log.i(TAG, "Calling Attestation without attesting props");
-            cert = mAttestPropsUtils.getAttestationCertificate(params[0].getContext(),
-                    params[0].getChallenge(), false);
+            pair = mAttestPropsUtils.getAttestationCertificateAndChain(
+                    params[0].getContext(), params[0].getChallenge(), false);
         }
-        return cert;
+        return pair;
 
     }
 
-    protected void onPostExecute(X509Certificate x509cert) {
-        mCallback.onComplete(x509cert, mIsDevicePropertyAttestationSupported);
+    protected void onPostExecute(Pair<X509Certificate, List<Certificate>> pair) {
+        mCallback.onComplete(pair, mIsDevicePropertyAttestationSupported);
     }
 
 }

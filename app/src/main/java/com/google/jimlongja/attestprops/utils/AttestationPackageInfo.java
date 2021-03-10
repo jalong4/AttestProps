@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.google.jimlongja.attestprops.utils;
+package com.google.jimlongja.attestprops.Utils;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Sequence;

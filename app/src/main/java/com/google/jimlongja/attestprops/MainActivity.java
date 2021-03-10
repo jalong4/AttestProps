@@ -6,13 +6,14 @@ import static android.os.Build.MANUFACTURER;
 import static android.os.Build.MODEL;
 import static android.os.Build.PRODUCT;
 
-import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
-import static com.google.jimlongja.attestprops.utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
+import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.HARDWARE_DEVICE_UNIQUE_ATTESTATION;
+import static com.google.jimlongja.attestprops.Utils.AttestPropsUtils.SOFTWARE_DEVICE_ID_ATTESTATION;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.TextView;
 
 import com.google.common.io.BaseEncoding;
@@ -22,11 +23,12 @@ import com.google.jimlongja.attestprops.Models.Challenge;
 import com.google.jimlongja.attestprops.Models.Nonce;
 
 import com.google.jimlongja.attestprops.Utils.Utils;
-import com.google.jimlongja.attestprops.utils.AttestPropsUtils;
-import com.google.jimlongja.attestprops.utils.Attestation;
-import com.google.jimlongja.attestprops.utils.AuthorizationList;
-import com.google.jimlongja.attestprops.utils.RootOfTrust;
+import com.google.jimlongja.attestprops.Utils.AttestPropsUtils;
+import com.google.jimlongja.attestprops.Utils.Attestation;
+import com.google.jimlongja.attestprops.Utils.AuthorizationList;
+import com.google.jimlongja.attestprops.Utils.RootOfTrust;
 
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
@@ -34,6 +36,7 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -169,8 +172,11 @@ public class MainActivity extends Activity {
                 new AttestPropsUtils().getSystemProperty(BUILD_FINGERPRINT));
     }
 
-    private void updateUIandLogOutput(X509Certificate x509cert,
+    private void updateUIandLogOutput(Pair<X509Certificate, List<Certificate>> pair,
                                       Boolean isDevicePropertyAttestationSupported) {
+
+        X509Certificate x509cert = pair == null ? null : pair.first;
+        List<Certificate> certChain = pair == null ? null : pair.second;
 
         if (x509cert == null) {
             Log.e(TAG, "Failed to get x509 cert");
@@ -203,9 +209,16 @@ public class MainActivity extends Activity {
 
             byte[] encodedCertificate = x509cert.getEncoded();
 
+            Log.i(TAG, "Certificate:\n" + x509cert.toString());
             Log.i(TAG, String.format("Encoded Certificate: (Size [%d])", encodedCertificate.length));
             Log.i(TAG, Utils.bytesToHex(encodedCertificate));
             Log.i(TAG, " ");
+
+            Log.i(TAG, "Certificate chain:");
+            for (Certificate cert : certChain) {
+                Log.i(TAG, "Chain Certificate:\n" + cert.toString());
+                Log.i(TAG, "Encoded Chain Certificate:\n" + Utils.bytesToHex(cert.getEncoded()));
+            }
 
             Log.i(TAG, "Attestation Object:");
             Log.i(TAG, attestation.toString());
